@@ -32,28 +32,43 @@ struct node {
 
 */
 
-void addList(struct node* nodo, struct list* lista) {
-
+void addList(struct node* nodo, struct list* lista) { // Quiero agregar un nodo al final de la lista
+    struct node* current = lista->first;
+    if(current == 0) { // Si current esta vacio
+        lista->first = nodo; //Lo primero que agrego es el nodo
+    } else {
+        while(current->next != '\0'){
+            current = current->next; // Voy avanzando hasta el ultimo
+        }
+        current->next = nodo; // Cuando llegue al ultimo le cargo el nodo 
+    }
+    nodo->next = NULL; // Le cargo el null para indicar que llegue al final
 }
 
 struct list* getMerge(struct list* twoLists) {
-    struct list* res = (struct list) malloc(sizeof(struct list)); // la lista que quiero devolver
-    res->first=NULL; //la inicio con todo vacio
+    struct list* res = (struct list) malloc(sizeof(struct list)); // Creo la lista que quiero devolver
+    
+    // Inicio la lista con todo vacio
+    res->first=NULL;
     res->size=0;
 
+    struct node *p1 = twoLists[0].first; // Accedo a la primera lista
+    struct node *p2 = twoLists[1].first; // Accedo a la segunda lista
+
     while(p1 != NULL || p2 != NULL) {
-        if(p1 != NULL){
+        if (p1 != NULL){
             addList(p1,res);
             p1=p1->next;
         }
-        if(p2 != NULL){
+        if (p2 != NULL){
             addList(p2,res);
             p2=p2->next;
         }
     }
 
-    deleteList(&twoLists[0]);
-    deleteList(&twoLists[1]);
+    free(&twoLists[0].first);
+    free(&twoLists[1].first);
+    free(twoLists);
     return res;
 
 }
