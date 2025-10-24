@@ -32,11 +32,30 @@ struct node {
 
 */
 
-struct list* getMerge(struct list* twoLists) {
-    struct node *p1 = twoLists[0].first; // Accedo a la primera lista
-    struct node *p2 = twoLists[1].first; // Accedo a la segunda lista
+void addList(struct node* nodo, struct list* lista) {
 
-    
+}
+
+struct list* getMerge(struct list* twoLists) {
+    struct list* res = (struct list) malloc(sizeof(struct list)); // la lista que quiero devolver
+    res->first=NULL; //la inicio con todo vacio
+    res->size=0;
+
+    while(p1 != NULL || p2 != NULL) {
+        if(p1 != NULL){
+            addList(p1,res);
+            p1=p1->next;
+        }
+        if(p2 != NULL){
+            addList(p2,res);
+            p2=p2->next;
+        }
+    }
+
+    deleteList(&twoLists[0]);
+    deleteList(&twoLists[1]);
+    return res;
+
 }
 
 int main() {
