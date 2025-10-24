@@ -56,5 +56,5 @@ int main() {
     // Libera la memoria
     free(resultado);
     
-    return 0
+    return 0;
 }
