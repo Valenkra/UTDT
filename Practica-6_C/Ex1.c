@@ -53,6 +53,32 @@ char* copy(char* s) {
     return newStr;
 }
 
+void replaceChar(char* s, char old, char new) {
+    int i = 0;
+    while (s[i] != '\0') {
+        if (s[i] == old) {
+            s[i] = new;
+        }
+        i++;
+    }
+}
+
+char* concat(char* s1, char* s2) {
+    int len1 = len(s1);
+    int len2 = len(s2);
+
+    char* newS = (char*)malloc((len1+len2)*sizeof(char));
+    for(int i = 0; i < len1; i++) {
+        newS[i] = s1[i];
+    }
+    for(int i = 0; i < len2; i++) {
+        newS[i+len1] = s2[i];
+    }
+    newS[len1+len2] = '\0';
+    return newS;
+
+}
+
 int main() {
     printf("%d\n",len("Hola"));
     printf("%d\n",len("Chau\n"));
@@ -62,6 +88,19 @@ int main() {
     char* copia = copy(original);
     printf("Original: %s\n", original);
     printf("Copia: %s\n", copia);  
+
+    // Reemplazar caracteres
+    replaceChar(copia, 'o', 'e');
+    printf("Copia modificada: %s\n", copia);
+
+
+    char* nuevo = concat(original, copia);
+    printf("Copia modificada: %s\n", nuevo);
+
+
+    // Liberar memoria
+    free(copia);
+    free(nuevo);
     return 0;
 }
 
