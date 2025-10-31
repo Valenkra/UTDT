@@ -52,12 +52,12 @@ int p2(int argc,char* argv[]){
         exit(1);
     }else if(rc == 0){
         //child(newprocess)
-        printf("hello,Iamchild(pid:%d)\n",(int)getpid());
+        printf("hello, I am child ( pid: %d )\n",(int)getpid());
         sleep(1); // Nos asegura que el padre llegue al wait
     } else{
         //parentgoesdownthispath(originalprocess)
         int wc = wait(NULL); // El padre llega al wait y agarra el id del hijo que llegue primero
-        printf("hello,Iamparentof%d(wc:%d)(pid:%d)\n", // Una vez que lo recolectò imprime primero el hijo y despues el padre
+        printf("hello, I am parent of %d ( wc: %d )( pid: %d )\n", // Una vez que lo recolectò imprime primero el hijo y despues el padre
         rc,wc,(int)getpid());
     }
     return 0;

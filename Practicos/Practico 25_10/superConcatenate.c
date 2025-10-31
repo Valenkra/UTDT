@@ -23,11 +23,15 @@ int getStrlen(char* s) {
 //Tmb puedo escribir (char** v, int size) que es un doble puntero
 char* superConcat(char* v[], int size) { 
     int len_total = 0;
+    
     for(int i = 0; i<size; i++) {
         len_total += getStrlen(v[i]);
     }
+
     char* res = (char*) malloc(sizeof(char)*len_total+1);
+    
     // sumamos un uno al final por el caracter nulo. NO olvidar!!
+    
     int pos = 0;
 
     // Relleno el espacio que esa vacio y agarro todo los
@@ -39,7 +43,9 @@ char* superConcat(char* v[], int size) {
             pos++;
         }
     }
+    
     res[pos] = '\0';
+    
     return res;
 }
 
