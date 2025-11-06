@@ -5,7 +5,7 @@
 #include <time.h>
 
 // ========= CONSTANTES DEL JUEGO =========
-#define SCREEN_WIDTH 901
+#define SCREEN_WIDTH 900
 #define SCREEN_HEIGHT 500
 
 #define GRID_OFFSET_X 220
