@@ -143,77 +143,44 @@ void gameBoardDelete(GameBoard* board) {
 }
 
 int gameBoardAddPlant(GameBoard* board, int row, int col) {
-    // imprimir rows[row] para encontrar el segmento que contiene `col`.
-    /*
-    RowSegment* segment = board->rows[row].first_segment;
-    while (segment != NULL) {
-        if (segment->start_col <= col && segment->start_col + segment->length > col) {
-            printf("El status del segmento es: %d\n", segment->status);
-            if(segment->status == STATUS_VACIO) {
-                // Cargar informacion de la planta segun el struct Planta
-                segment->planta_data = (Planta*)malloc(sizeof(Planta));
-                if (!segment->planta_data) return 0; // fallo al asignar memoria
-                segment->planta_data->rect.x = GRID_OFFSET_X + (cursor.col * CELL_WIDTH);
-                segment->planta_data->rect.y = GRID_OFFSET_Y + (cursor.row * CELL_HEIGHT);
-                segment->planta_data->rect.w = CELL_WIDTH;
-                segment->planta_data->rect.h = CELL_HEIGHT;
-                segment->planta_data->activo = 1;
-                segment->planta_data->cooldown = rand() % 100;
-                segment->planta_data->current_frame = 0;
-                segment->planta_data->frame_timer = 0;
-                segment->planta_data->debe_disparar = 0;
-
-                printf("Encontrado segmento VACIO que contiene col %d\n", col);
-                segment->status = STATUS_PLANTA;
-                break;
-            }
-        printf("Segmento: start_col=%d, length=%d, status=%d\n", segment->start_col, segment->length, segment->status);
-        segment = segment->next;
-    }}*/
-
-    // TODO: Encontrar la GardenRow correcta.
-    // TODO: Recorrer la lista de RowSegment hasta encontrar el segmento VACIO que contenga a `col`.
+    // TODO: Encontrar la GardenRow correcta. ✓
+    // TODO: Recorrer la lista de RowSegment hasta encontrar el segmento VACIO que contenga a `col`. ✓
     // TODO: Si se encuentra y tiene espacio, realizar la lógica de DIVISIÓN de segmento.
     // TODO: Crear la nueva `Planta` con memoria dinámica y asignarla al `planta_data` del nuevo segmento.
-    /*printf("Función gameBoardAddPlant no implementada.\n");
-    return 0; // No se pudo agregar la planta   */
-    if (!board || row < 0 || row >= GRID_ROWS || col < 0 || col >= GRID_COLS) {
-        return 0;
-    }
 
-    // Encontrar el segmento que contiene esta columna
+    // Encontrar la GardenRow correcta - Selecciono la GardenRow correcta que me pasan por parámetro
     RowSegment* segment = board->rows[row].first_segment;
     RowSegment* prev_segment = NULL;
     
     while (segment != NULL) {
         int seg_end = segment->start_col + segment->length;
         
-        // Verificar si este segmento contiene la columna
+        // Me fijo si el segmento que estoy buscando se encuentra en este bloque
         if (segment->start_col <= col && col < seg_end) {
-            // Solo se puede plantar en segmentos vacíos
+            // Encuentro el segmento VACIO que contenga a `col`
             if (segment->status != STATUS_VACIO) {
                 printf("Ya hay una planta en esta celda\n");
                 return 0;
             }
             
             // Crear la planta
-            Planta* nueva_planta = (Planta*)malloc(sizeof(Planta));
-            if (!nueva_planta) return 0;
+            Planta* new_plant = (Planta*)malloc(sizeof(Planta));
+            if (!new_plant) return 0;
             
-            nueva_planta->rect.x = GRID_OFFSET_X + (col * CELL_WIDTH);
-            nueva_planta->rect.y = GRID_OFFSET_Y + (row * CELL_HEIGHT);
-            nueva_planta->rect.w = CELL_WIDTH;
-            nueva_planta->rect.h = CELL_HEIGHT;
-            nueva_planta->activo = 1;
-            nueva_planta->cooldown = rand() % 100;
-            nueva_planta->current_frame = 0;
-            nueva_planta->frame_timer = 0;
-            nueva_planta->debe_disparar = 0;
+            new_plant->rect.x = GRID_OFFSET_X + (col * CELL_WIDTH);
+            new_plant->rect.y = GRID_OFFSET_Y + (row * CELL_HEIGHT);
+            new_plant->rect.w = CELL_WIDTH;
+            new_plant->rect.h = CELL_HEIGHT;
+            new_plant->activo = 1;
+            new_plant->cooldown = rand() % 100;
+            new_plant->current_frame = 0;
+            new_plant->frame_timer = 0;
+            new_plant->debe_disparar = 0;
             
             // CASO 1: El segmento tiene una sola celda
             if (segment->length == 1) {
                 segment->status = STATUS_PLANTA;
-                segment->planta_data = nueva_planta;
+                segment->planta_data = new_plant;
                 printf("Planta agregada en segmento de 1 celda [%d,%d]\n", row, col);
                 return 1;
             }
@@ -223,13 +190,13 @@ int gameBoardAddPlant(GameBoard* board, int row, int col) {
                 // Crear nuevo segmento PLANTA al inicio
                 RowSegment* nuevo_seg = (RowSegment*)malloc(sizeof(RowSegment));
                 if (!nuevo_seg) {
-                    free(nueva_planta);
+                    free(new_plant);
                     return 0;
                 }
                 nuevo_seg->status = STATUS_PLANTA;
                 nuevo_seg->start_col = col;
                 nuevo_seg->length = 1;
-                nuevo_seg->planta_data = nueva_planta;
+                nuevo_seg->planta_data = new_plant;
                 nuevo_seg->next = segment;
                 
                 // Ajustar el segmento vacío restante
@@ -252,13 +219,13 @@ int gameBoardAddPlant(GameBoard* board, int row, int col) {
                 // Crear nuevo segmento PLANTA al final
                 RowSegment* nuevo_seg = (RowSegment*)malloc(sizeof(RowSegment));
                 if (!nuevo_seg) {
-                    free(nueva_planta);
+                    free(new_plant);
                     return 0;
                 }
                 nuevo_seg->status = STATUS_PLANTA;
                 nuevo_seg->start_col = col;
                 nuevo_seg->length = 1;
-                nuevo_seg->planta_data = nueva_planta;
+                nuevo_seg->planta_data = new_plant;
                 nuevo_seg->next = segment->next;
                 
                 // Ajustar el segmento vacío
@@ -273,7 +240,7 @@ int gameBoardAddPlant(GameBoard* board, int row, int col) {
             RowSegment* seg_planta = (RowSegment*)malloc(sizeof(RowSegment));
             RowSegment* seg_derecha = (RowSegment*)malloc(sizeof(RowSegment));
             if (!seg_planta || !seg_derecha) {
-                free(nueva_planta);
+                free(new_plant);
                 if (seg_planta) free(seg_planta);
                 if (seg_derecha) free(seg_derecha);
                 return 0;
@@ -283,7 +250,7 @@ int gameBoardAddPlant(GameBoard* board, int row, int col) {
             seg_planta->status = STATUS_PLANTA;
             seg_planta->start_col = col;
             seg_planta->length = 1;
-            seg_planta->planta_data = nueva_planta;
+            seg_planta->planta_data = new_plant;
             
             // Segmento vacío derecho
             seg_derecha->status = STATUS_VACIO;
