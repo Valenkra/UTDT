@@ -143,12 +143,171 @@ void gameBoardDelete(GameBoard* board) {
 }
 
 int gameBoardAddPlant(GameBoard* board, int row, int col) {
+    // imprimir rows[row] para encontrar el segmento que contiene `col`.
+    /*
+    RowSegment* segment = board->rows[row].first_segment;
+    while (segment != NULL) {
+        if (segment->start_col <= col && segment->start_col + segment->length > col) {
+            printf("El status del segmento es: %d\n", segment->status);
+            if(segment->status == STATUS_VACIO) {
+                // Cargar informacion de la planta segun el struct Planta
+                segment->planta_data = (Planta*)malloc(sizeof(Planta));
+                if (!segment->planta_data) return 0; // fallo al asignar memoria
+                segment->planta_data->rect.x = GRID_OFFSET_X + (cursor.col * CELL_WIDTH);
+                segment->planta_data->rect.y = GRID_OFFSET_Y + (cursor.row * CELL_HEIGHT);
+                segment->planta_data->rect.w = CELL_WIDTH;
+                segment->planta_data->rect.h = CELL_HEIGHT;
+                segment->planta_data->activo = 1;
+                segment->planta_data->cooldown = rand() % 100;
+                segment->planta_data->current_frame = 0;
+                segment->planta_data->frame_timer = 0;
+                segment->planta_data->debe_disparar = 0;
+
+                printf("Encontrado segmento VACIO que contiene col %d\n", col);
+                segment->status = STATUS_PLANTA;
+                break;
+            }
+        printf("Segmento: start_col=%d, length=%d, status=%d\n", segment->start_col, segment->length, segment->status);
+        segment = segment->next;
+    }}*/
+
     // TODO: Encontrar la GardenRow correcta.
     // TODO: Recorrer la lista de RowSegment hasta encontrar el segmento VACIO que contenga a `col`.
     // TODO: Si se encuentra y tiene espacio, realizar la lógica de DIVISIÓN de segmento.
     // TODO: Crear la nueva `Planta` con memoria dinámica y asignarla al `planta_data` del nuevo segmento.
-    printf("Función gameBoardAddPlant no implementada.\n");
+    /*printf("Función gameBoardAddPlant no implementada.\n");
+    return 0; // No se pudo agregar la planta   */
+    if (!board || row < 0 || row >= GRID_ROWS || col < 0 || col >= GRID_COLS) {
+        return 0;
+    }
+
+    // Encontrar el segmento que contiene esta columna
+    RowSegment* segment = board->rows[row].first_segment;
+    RowSegment* prev_segment = NULL;
+    
+    while (segment != NULL) {
+        int seg_end = segment->start_col + segment->length;
+        
+        // Verificar si este segmento contiene la columna
+        if (segment->start_col <= col && col < seg_end) {
+            // Solo se puede plantar en segmentos vacíos
+            if (segment->status != STATUS_VACIO) {
+                printf("Ya hay una planta en esta celda\n");
+                return 0;
+            }
+            
+            // Crear la planta
+            Planta* nueva_planta = (Planta*)malloc(sizeof(Planta));
+            if (!nueva_planta) return 0;
+            
+            nueva_planta->rect.x = GRID_OFFSET_X + (col * CELL_WIDTH);
+            nueva_planta->rect.y = GRID_OFFSET_Y + (row * CELL_HEIGHT);
+            nueva_planta->rect.w = CELL_WIDTH;
+            nueva_planta->rect.h = CELL_HEIGHT;
+            nueva_planta->activo = 1;
+            nueva_planta->cooldown = rand() % 100;
+            nueva_planta->current_frame = 0;
+            nueva_planta->frame_timer = 0;
+            nueva_planta->debe_disparar = 0;
+            
+            // CASO 1: El segmento tiene una sola celda
+            if (segment->length == 1) {
+                segment->status = STATUS_PLANTA;
+                segment->planta_data = nueva_planta;
+                printf("Planta agregada en segmento de 1 celda [%d,%d]\n", row, col);
+                return 1;
+            }
+            
+            // CASO 2: La planta está al inicio del segmento
+            if (col == segment->start_col) {
+                // Crear nuevo segmento PLANTA al inicio
+                RowSegment* nuevo_seg = (RowSegment*)malloc(sizeof(RowSegment));
+                if (!nuevo_seg) {
+                    free(nueva_planta);
+                    return 0;
+                }
+                nuevo_seg->status = STATUS_PLANTA;
+                nuevo_seg->start_col = col;
+                nuevo_seg->length = 1;
+                nuevo_seg->planta_data = nueva_planta;
+                nuevo_seg->next = segment;
+                
+                // Ajustar el segmento vacío restante
+                segment->start_col = col + 1;
+                segment->length--;
+                
+                // Conectar con el segmento anterior
+                if (prev_segment == NULL) {
+                    board->rows[row].first_segment = nuevo_seg;
+                } else {
+                    prev_segment->next = nuevo_seg;
+                }
+                
+                printf("Planta agregada al inicio del segmento [%d,%d]\n", row, col);
+                return 1;
+            }
+            
+            // CASO 3: La planta está al final del segmento
+            if (col == seg_end - 1) {
+                // Crear nuevo segmento PLANTA al final
+                RowSegment* nuevo_seg = (RowSegment*)malloc(sizeof(RowSegment));
+                if (!nuevo_seg) {
+                    free(nueva_planta);
+                    return 0;
+                }
+                nuevo_seg->status = STATUS_PLANTA;
+                nuevo_seg->start_col = col;
+                nuevo_seg->length = 1;
+                nuevo_seg->planta_data = nueva_planta;
+                nuevo_seg->next = segment->next;
+                
+                // Ajustar el segmento vacío
+                segment->length--;
+                segment->next = nuevo_seg;
+                
+                printf("Planta agregada al final del segmento [%d,%d]\n", row, col);
+                return 1;
+            }
+            
+            // CASO 4: La planta está en medio del segmento (división en 3)
+            RowSegment* seg_planta = (RowSegment*)malloc(sizeof(RowSegment));
+            RowSegment* seg_derecha = (RowSegment*)malloc(sizeof(RowSegment));
+            if (!seg_planta || !seg_derecha) {
+                free(nueva_planta);
+                if (seg_planta) free(seg_planta);
+                if (seg_derecha) free(seg_derecha);
+                return 0;
+            }
+            
+            // Segmento de la planta
+            seg_planta->status = STATUS_PLANTA;
+            seg_planta->start_col = col;
+            seg_planta->length = 1;
+            seg_planta->planta_data = nueva_planta;
+            
+            // Segmento vacío derecho
+            seg_derecha->status = STATUS_VACIO;
+            seg_derecha->start_col = col + 1;
+            seg_derecha->length = seg_end - (col + 1);
+            seg_derecha->planta_data = NULL;
+            seg_derecha->next = segment->next;
+            
+            // Ajustar segmento izquierdo (el original)
+            segment->length = col - segment->start_col;
+            segment->next = seg_planta;
+            seg_planta->next = seg_derecha;
+            
+            printf("Planta agregada dividiendo segmento en 3 [%d,%d]\n", row, col);
+            return 1;
+        }
+        
+        prev_segment = segment;
+        segment = segment->next;
+    }
+    
+    printf("No se encontró segmento que contenga la columna %d\n", col);
     return 0;
+
 }
 
 void gameBoardRemovePlant(GameBoard* board, int row, int col) {
@@ -171,10 +330,161 @@ void gameBoardUpdate(GameBoard* board) {
     // TODO: Recorrer las listas de zombies de cada fila para moverlos y animarlos.
     // TODO: Recorrer las listas de segmentos de cada fila para gestionar los cooldowns y animaciones de las plantas.
     // TODO: Actualizar la lógica de disparo, colisiones y spawn de zombies.
+
+    // ========= ACTUALIZAR ZOMBIES =========
+    for (int row = 0; row < GRID_ROWS; row++) {
+        ZombieNode* zombie_node = board->rows[row].first_zombie;
+        ZombieNode* prev_zombie = NULL;
+
+        while (zombie_node != NULL) {
+            Zombie* z = &zombie_node->zombie_data;
+            
+            if (z->activo) {
+                // Actualizar animación
+                z->frame_timer++;
+                if (z->frame_timer >= ZOMBIE_ANIMATION_SPEED) {
+                    z->frame_timer = 0;
+                    z->current_frame = (z->current_frame + 1) % ZOMBIE_TOTAL_FRAMES;
+                    
+                    // Mover zombie al completar el ciclo de animación
+                    if (z->current_frame == 0) {
+                        z->pos_x -= ZOMBIE_DISTANCE_PER_CYCLE;
+                        z->rect.x = (int)z->pos_x;
+                    }
+                }
+
+                // Verificar si el zombie llegó a la casa (game over)
+                if (z->rect.x + z->rect.w < GRID_OFFSET_X) {
+                    printf("¡Un zombie llegó a la casa! Game Over\n");
+                    z->activo = 0;
+                }
+
+                // Verificar colisión con arvejas
+                for (int i = 0; i < MAX_ARVEJAS; i++) {
+                    if (board->arvejas[i].activo) {
+                        Arveja* a = &board->arvejas[i];
+                        if (SDL_HasIntersection(&a->rect, &z->rect)) {
+                            a->activo = 0;
+                            z->vida--;
+                            if (z->vida <= 0) {
+                                z->activo = 0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Remover zombie si está inactivo
+            if (!z->activo) {
+                ZombieNode* to_delete = zombie_node;
+                if (prev_zombie == NULL) {
+                    board->rows[row].first_zombie = zombie_node->next;
+                    zombie_node = zombie_node->next;
+                } else {
+                    prev_zombie->next = zombie_node->next;
+                    zombie_node = zombie_node->next;
+                }
+                free(to_delete);
+            } else {
+                prev_zombie = zombie_node;
+                zombie_node = zombie_node->next;
+            }
+        }
+    }
+
+    // ========= ACTUALIZAR PLANTAS =========
+    for (int row = 0; row < GRID_ROWS; row++) {
+        RowSegment* segment = board->rows[row].first_segment;
+        
+        while (segment != NULL) {
+            if (segment->status == STATUS_PLANTA && segment->planta_data != NULL) {
+                Planta* p = segment->planta_data;
+                
+                // Actualizar animación
+                p->frame_timer++;
+                if (p->frame_timer >= PEASHOOTER_ANIMATION_SPEED) {
+                    p->frame_timer = 0;
+                    
+                    // Verificar si debe disparar en este frame
+                    if (p->current_frame == PEASHOOTER_SHOOT_FRAME && p->cooldown <= 0) {
+                        // Verificar si hay zombies en esta fila
+                        int hay_zombies = 0;
+                        ZombieNode* z_node = board->rows[row].first_zombie;
+                        while (z_node != NULL) {
+                            if (z_node->zombie_data.activo) {
+                                hay_zombies = 1;
+                                break;
+                            }
+                            z_node = z_node->next;
+                        }
+                        
+                        if (hay_zombies) {
+                            p->debe_disparar = 1;
+                            p->cooldown = 60; // Cooldown de ~1 segundo
+                        }
+                    }
+                    
+                    p->current_frame = (p->current_frame + 1) % PEASHOOTER_TOTAL_FRAMES;
+                }
+                
+                // Actualizar cooldown
+                if (p->cooldown > 0) {
+                    p->cooldown--;
+                }
+                
+                // Crear arveja si debe disparar
+                if (p->debe_disparar) {
+                    for (int i = 0; i < MAX_ARVEJAS; i++) {
+                        if (!board->arvejas[i].activo) {
+                            board->arvejas[i].rect.x = p->rect.x + p->rect.w / 2;
+                            board->arvejas[i].rect.y = p->rect.y + p->rect.h / 2 - 5;
+                            board->arvejas[i].rect.w = 20;
+                            board->arvejas[i].rect.h = 20;
+                            board->arvejas[i].activo = 1;
+                            break;
+                        }
+                    }
+                    p->debe_disparar = 0;
+                }
+            }
+            segment = segment->next;
+        }
+    }
+
+    // ========= ACTUALIZAR ARVEJAS =========
+    for (int i = 0; i < MAX_ARVEJAS; i++) {
+        if (board->arvejas[i].activo) {
+            board->arvejas[i].rect.x += PEA_SPEED;
+            
+            // Desactivar si sale de la pantalla
+            if (board->arvejas[i].rect.x > SCREEN_WIDTH) {
+                board->arvejas[i].activo = 0;
+            }
+        }
+    }
+
+    // ========= SPAWN DE ZOMBIES =========
+    board->zombie_spawn_timer--;
+    if (board->zombie_spawn_timer <= 0) {
+        int random_row = rand() % GRID_ROWS;
+        gameBoardAddZombie(board, random_row);
+        board->zombie_spawn_timer = ZOMBIE_SPAWN_RATE;
+    }
 }
 
+/*
 void gameBoardDraw(GameBoard* board) {
     if (!board) return;
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, tex_background, NULL, NULL);
+
+
+
+    SDL_RenderPresent(renderer);
+}*/
+void gameBoardDraw(GameBoard* board) {
+    if (!board) return;
+    
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, tex_background, NULL, NULL);
 
@@ -182,6 +492,68 @@ void gameBoardDraw(GameBoard* board) {
     // TODO: Recorrer las listas de segmentos para dibujar las plantas.
     // TODO: Recorrer las listas de zombies para dibujarlos.
     // TODO: Dibujar las arvejas y el cursor.
+
+    // ========= DIBUJAR PLANTAS =========
+    for (int row = 0; row < GRID_ROWS; row++) {
+        RowSegment* segment = board->rows[row].first_segment;
+        
+        while (segment != NULL) {
+            if (segment->status == STATUS_PLANTA && segment->planta_data != NULL) {
+                Planta* p = segment->planta_data;
+                
+                // Calcular el frame en el spritesheet
+                SDL_Rect srcRect;
+                srcRect.x = (p->current_frame % 10) * PEASHOOTER_FRAME_WIDTH;
+                srcRect.y = (p->current_frame / 10) * PEASHOOTER_FRAME_HEIGHT;
+                srcRect.w = PEASHOOTER_FRAME_WIDTH;
+                srcRect.h = PEASHOOTER_FRAME_HEIGHT;
+                
+                SDL_RenderCopy(renderer, tex_peashooter_sheet, &srcRect, &p->rect);
+            }
+            segment = segment->next;
+        }
+    }
+
+    // ========= DIBUJAR ZOMBIES =========
+    for (int row = 0; row < GRID_ROWS; row++) {
+        ZombieNode* zombie_node = board->rows[row].first_zombie;
+        
+        while (zombie_node != NULL) {
+            Zombie* z = &zombie_node->zombie_data;
+            
+            if (z->activo) {
+                // Calcular el frame en el spritesheet
+                SDL_Rect srcRect;
+                srcRect.x = (z->current_frame % 10) * ZOMBIE_FRAME_WIDTH;
+                srcRect.y = (z->current_frame / 10) * ZOMBIE_FRAME_HEIGHT;
+                srcRect.w = ZOMBIE_FRAME_WIDTH;
+                srcRect.h = ZOMBIE_FRAME_HEIGHT;
+                
+                SDL_RenderCopy(renderer, tex_zombie_sheet, &srcRect, &z->rect);
+            }
+            
+            zombie_node = zombie_node->next;
+        }
+    }
+
+    // ========= DIBUJAR ARVEJAS =========
+    for (int i = 0; i < MAX_ARVEJAS; i++) {
+        if (board->arvejas[i].activo) {
+            SDL_RenderCopy(renderer, tex_pea, NULL, &board->arvejas[i].rect);
+        }
+    }
+
+    // ========= DIBUJAR CURSOR =========
+    SDL_Rect cursorRect;
+    cursorRect.x = GRID_OFFSET_X + (cursor.col * CELL_WIDTH);
+    cursorRect.y = GRID_OFFSET_Y + (cursor.row * CELL_HEIGHT);
+    cursorRect.w = CELL_WIDTH;
+    cursorRect.h = CELL_HEIGHT;
+    
+    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 100);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_RenderFillRect(renderer, &cursorRect);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
     SDL_RenderPresent(renderer);
 }
