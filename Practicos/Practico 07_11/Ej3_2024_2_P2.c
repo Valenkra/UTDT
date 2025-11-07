@@ -43,13 +43,13 @@
 
 void f() {
     A();
-    // pthread_mutex_lock(&mutex_a);
+    // SECCION CRITICA - pthread_mutex_lock(&mutex_a);
     a = a + 1;
-    // pthread_mutex_unlock(&mutex_a);
+    // FIN DE SECCION CRITICA - pthread_mutex_unlock(&mutex_a);
     B();
-    // pthread_mutex_lock(&mutex_b);
+    // SECCION CRITICA - pthread_mutex_lock(&mutex_b);
     b = b + 1;
-    // pthread_mutex_unlock(&mutex_b);
+    // FIN DE SECCION CRITICA - pthread_mutex_unlock(&mutex_b);
 }
 int a = 0;
 int b = 0;
@@ -57,7 +57,7 @@ int b = 0;
 int main() {
     pthread_t th1, th2, th3;
 
-    pthread_create(&th1, 0, &f, 0);
+    pthread_create(&th1, 0, &f, 0);.
     pthread_create(&th2, 0, &f, 0);
     pthread_create(&th3, 0, &f, 0);
 
@@ -68,3 +68,22 @@ int main() {
     printf("a: %i, b: %i\n", a, b);
     return 0;
 }
+
+/*
+    Respuesta al punto 4:
+    Agrego una barrera entre A() y B()
+        void f() {
+            A();
+            a = a + 1;
+            BARRERA() - pthread_barrier_wait(&barrier);
+            B();
+            b = b + 1;
+
+        
+        }
+    BARRERA: Primero se ejecuta todos los A en forma pararlela 
+    y despues todos los B en forma paralelo. A siempre se va a ejecutar
+    antes que B y B siempre se va a ejecutar despues que A.
+
+    APRENDER SOBRE: Barrera, seaforo y seccion critica
+*/
