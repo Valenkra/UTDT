@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-// ========= CONSTANTES DEL JUEGO =========
+//  CONSTANTES DEL JUEGO 
 #define SCREEN_WIDTH 900
 #define SCREEN_HEIGHT 500
 
@@ -35,7 +35,7 @@
 #define ZOMBIE_SPAWN_RATE 300
 
 
-// ========= ESTRUCTURAS DE DATOS =========
+//  ESTRUCTURAS DE DATOS 
 typedef struct {
     int row, col;
 } Cursor;
@@ -64,7 +64,7 @@ typedef struct {
     float pos_x;
 } Zombie;
 
-// ========= NUEVAS ESTRUCTURAS =========
+//  NUEVAS ESTRUCTURAS 
 #define STATUS_VACIO 0
 #define STATUS_PLANTA 1
 
@@ -93,7 +93,7 @@ typedef struct GameBoard {
 } GameBoard;
 
 
-// ========= VARIABLES GLOBALES =========
+//  VARIABLES GLOBALES 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 SDL_Texture* tex_background = NULL;
@@ -104,7 +104,7 @@ SDL_Texture* tex_pea = NULL;
 Cursor cursor = {0, 0};
 GameBoard* game_board = NULL;
 
-// ========= FUNCIONES =========
+//  FUNCIONES 
 
 GameBoard* gameBoardNew() {
     GameBoard* board = (GameBoard*)malloc(sizeof(GameBoard));
@@ -288,6 +288,33 @@ void gameBoardAddZombie(GameBoard* board, int row) {
     // TODO: Crear un nuevo ZombieNode con memoria dinámica.
     // TODO: Inicializar sus datos (posición, vida, animación, etc.).
     // TODO: Agregarlo a la lista enlazada simple de la GardenRow correspondiente.
+
+    ZombieNode* new_zombie = (ZombieNode*)malloc(sizeof(ZombieNode));
+    if (!new_zombie) {
+        printf("Error al crear nuevo zombie.\n");
+        return;
+    }
+
+    // Inicializar datos del zombie
+    new_zombie->zombie_data.pos_x = GRID_WIDTH;
+    new_zombie->zombie_data.row = row;
+    new_zombie->zombie_data.vida = 100;
+    new_zombie->zombie_data.activo = 1;
+    new_zombie->zombie_data.current_frame = 0;
+    new_zombie->zombie_data.frame_timer = 0;
+    new_zombie->next = NULL;
+
+    // Agregar a la lista de zombies de la fila correspondiente
+    if (!board->rows[row].first_zombie) {
+        board->rows[row].first_zombie = new_zombie;
+    } else {
+        ZombieNode* last = board->rows[row].first_zombie;
+        while (last->next) {
+            last = last->next;
+        }
+        last->next = new_zombie;
+    }
+
     printf("Función gameBoardAddZombie no implementada.\n");
 }
 
@@ -298,7 +325,7 @@ void gameBoardUpdate(GameBoard* board) {
     // TODO: Recorrer las listas de segmentos de cada fila para gestionar los cooldowns y animaciones de las plantas.
     // TODO: Actualizar la lógica de disparo, colisiones y spawn de zombies.
 
-    // ========= ACTUALIZAR ZOMBIES =========
+    //  ACTUALIZAR ZOMBIES 
     for (int row = 0; row < GRID_ROWS; row++) {
         ZombieNode* zombie_node = board->rows[row].first_zombie;
         ZombieNode* prev_zombie = NULL;
@@ -359,7 +386,7 @@ void gameBoardUpdate(GameBoard* board) {
         }
     }
 
-    // ========= ACTUALIZAR PLANTAS =========
+    //  ACTUALIZAR PLANTAS 
     for (int row = 0; row < GRID_ROWS; row++) {
         RowSegment* segment = board->rows[row].first_segment;
         
@@ -418,7 +445,7 @@ void gameBoardUpdate(GameBoard* board) {
         }
     }
 
-    // ========= ACTUALIZAR ARVEJAS =========
+    //  ACTUALIZAR ARVEJAS 
     for (int i = 0; i < MAX_ARVEJAS; i++) {
         if (board->arvejas[i].activo) {
             board->arvejas[i].rect.x += PEA_SPEED;
@@ -430,7 +457,7 @@ void gameBoardUpdate(GameBoard* board) {
         }
     }
 
-    // ========= SPAWN DE ZOMBIES =========
+    //  SPAWN DE ZOMBIES 
     board->zombie_spawn_timer--;
     if (board->zombie_spawn_timer <= 0) {
         int random_row = rand() % GRID_ROWS;
@@ -439,16 +466,6 @@ void gameBoardUpdate(GameBoard* board) {
     }
 }
 
-/*
-void gameBoardDraw(GameBoard* board) {
-    if (!board) return;
-    SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, tex_background, NULL, NULL);
-
-
-
-    SDL_RenderPresent(renderer);
-}*/
 void gameBoardDraw(GameBoard* board) {
     if (!board) return;
     
@@ -460,28 +477,21 @@ void gameBoardDraw(GameBoard* board) {
     // TODO: Recorrer las listas de zombies para dibujarlos.
     // TODO: Dibujar las arvejas y el cursor.
 
-    // ========= DIBUJAR PLANTAS =========
+    // Dibujo las plantas
     for (int row = 0; row < GRID_ROWS; row++) {
         RowSegment* segment = board->rows[row].first_segment;
         
         while (segment != NULL) {
             if (segment->status == STATUS_PLANTA && segment->planta_data != NULL) {
                 Planta* p = segment->planta_data;
-                
-                // Calcular el frame en el spritesheet
-                SDL_Rect srcRect;
-                srcRect.x = (p->current_frame % 10) * PEASHOOTER_FRAME_WIDTH;
-                srcRect.y = (p->current_frame / 10) * PEASHOOTER_FRAME_HEIGHT;
-                srcRect.w = PEASHOOTER_FRAME_WIDTH;
-                srcRect.h = PEASHOOTER_FRAME_HEIGHT;
-                
-                SDL_RenderCopy(renderer, tex_peashooter_sheet, &srcRect, &p->rect);
+                SDL_Rect src_rect = { p->current_frame * PEASHOOTER_FRAME_WIDTH, 0, PEASHOOTER_FRAME_WIDTH, PEASHOOTER_FRAME_HEIGHT };
+                SDL_RenderCopy(renderer, tex_peashooter_sheet, &src_rect, &p->rect);
             }
             segment = segment->next;
         }
     }
 
-    // ========= DIBUJAR ZOMBIES =========
+    // Dibujo los zombies
     for (int row = 0; row < GRID_ROWS; row++) {
         ZombieNode* zombie_node = board->rows[row].first_zombie;
         
@@ -489,39 +499,25 @@ void gameBoardDraw(GameBoard* board) {
             Zombie* z = &zombie_node->zombie_data;
             
             if (z->activo) {
-                // Calcular el frame en el spritesheet
-                SDL_Rect srcRect;
-                srcRect.x = (z->current_frame % 10) * ZOMBIE_FRAME_WIDTH;
-                srcRect.y = (z->current_frame / 10) * ZOMBIE_FRAME_HEIGHT;
-                srcRect.w = ZOMBIE_FRAME_WIDTH;
-                srcRect.h = ZOMBIE_FRAME_HEIGHT;
-                
-                SDL_RenderCopy(renderer, tex_zombie_sheet, &srcRect, &z->rect);
+                SDL_Rect src_rect = { z->current_frame * ZOMBIE_FRAME_WIDTH, 0, ZOMBIE_FRAME_WIDTH, ZOMBIE_FRAME_HEIGHT };
+                SDL_RenderCopy(renderer, tex_zombie_sheet, &src_rect, &z->rect);
             }
             
             zombie_node = zombie_node->next;
         }
     }
 
-    // ========= DIBUJAR ARVEJAS =========
+    // Dibujo las arvejas 
     for (int i = 0; i < MAX_ARVEJAS; i++) {
         if (board->arvejas[i].activo) {
             SDL_RenderCopy(renderer, tex_pea, NULL, &board->arvejas[i].rect);
         }
     }
 
-    // ========= DIBUJAR CURSOR =========
-    SDL_Rect cursorRect;
-    cursorRect.x = GRID_OFFSET_X + (cursor.col * CELL_WIDTH);
-    cursorRect.y = GRID_OFFSET_Y + (cursor.row * CELL_HEIGHT);
-    cursorRect.w = CELL_WIDTH;
-    cursorRect.h = CELL_HEIGHT;
-    
-    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 100);
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-    SDL_RenderFillRect(renderer, &cursorRect);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
+    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 200);
+    SDL_Rect cursor_rect = {GRID_OFFSET_X + cursor.col * CELL_WIDTH, GRID_OFFSET_Y + cursor.row * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT};
+    SDL_RenderDrawRect(renderer, &cursor_rect);
     SDL_RenderPresent(renderer);
 }
 
