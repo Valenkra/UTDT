@@ -135,61 +135,59 @@ GameBoard* gameBoardNew() {
 
 void gameBoardDelete(GameBoard* board) {
     // TODO: Liberar toda la memoria dinámica.
-    // TODO: Recorrer cada GardenRow.
-    // TODO: Liberar todos los RowSegment (y los planta_data si existen).
-    // TODO: Liberar todos los ZombieNode.
-    // TODO: Finalmente, liberar el GameBoard.
-    if (!board) return;
-    
-    for (int i = 0; i < GRID_ROWS; i++) {
+    for (int i = 0; i < GRID_ROWS; i++) { // TODO: Recorrer cada GardenRow.
+		// TODO: Liberar todos los RowSegment (y los planta_data si existen).
         RowSegment* mySegment = board->rows[i].first_segment;
         while (mySegment != NULL) {
-            RowSegment* next_segment = mySegment->next;
-            
             if (mySegment->planta_data != NULL) {
                 free(mySegment->planta_data);
             }
             
             free(mySegment);
-            mySegment = next_segment;
+            mySegment = mySegment->next;
         }
-        
+    	
+		// TODO: Liberar todos los ZombieNode.
         ZombieNode* zombieNode = board->rows[i].first_zombie;
         while (zombieNode != NULL) {
-            ZombieNode* next_zombie = zombieNode->next;
             free(zombieNode);
-            zombieNode = next_zombie;
+            zombieNode = zombieNode->next;
         }
     }
     
-    free(board);
+    free(board); // TODO: Finalmente, liberar el GameBoard.
 }
 
 void gameBoardRemovePlant(GameBoard* board, int row, int col) {
-    // TODO: Similar a AddPlant, encontrar el segmento que contiene `col`.
-    // TODO: Si es un segmento de tipo PLANTA, convertirlo a VACIO y liberar el `planta_data`.
-    // TODO: Implementar la lógica de FUSIÓN con los segmentos vecinos si también son VACIO.
-    if (!board) return;
-    
+	/* 
+		Disclaimer: Por la forma en la que implementamos esta función tomamos la precaucion
+		de inicializarla antes que gameBoardAddPlant.
+		De esta forma podríamos llamar a gameBoardRemovePlant desde el AddPlant si
+		llegamos a un (row, col) ocupado.
+	*/
+
     RowSegment* mySegment = board->rows[row].first_segment;
-    RowSegment* prev_segment = NULL;
+    RowSegment* prevSegment = NULL; // Me va a servir para hacer la fusión con el anterior
     
     while (mySegment != NULL) {
-        int seg_end = mySegment->start_col + mySegment->length;
-        
-        if (mySegment->start_col <= col && col < seg_end) {
+		// TODO: Encontrar el segmento que contiene `col`.
+		// If (la columna que busco se encuentra en el rango que necesito)...
+        if (mySegment->start_col <= col && col < (mySegment->start_col + mySegment->length)) {
+			// ¿Estamos seguros de que es un segmento ocupado por una planta?
             if (mySegment->status != STATUS_PLANTA) {
                 printf("No hay planta en esta celda para remover.\n");
                 return;
             }
-            
+			
+    		// TODO: Si es un segmento de tipo PLANTA, convertirlo a VACIO y liberar el `planta_data`.
             if (mySegment->planta_data != NULL) {
                 free(mySegment->planta_data);
                 mySegment->planta_data = NULL;
             }
             
             mySegment->status = STATUS_VACIO;
-            
+			
+			// Intento hacer la fusión con el siguiente segmento si esta vacio
             if (mySegment->next != NULL && mySegment->next->status == STATUS_VACIO) {
                 RowSegment* next_seg = mySegment->next;
                 mySegment->length += next_seg->length;
@@ -197,18 +195,17 @@ void gameBoardRemovePlant(GameBoard* board, int row, int col) {
                 free(next_seg);
             }
             
-            if (prev_segment != NULL && prev_segment->status == STATUS_VACIO) {
-                prev_segment->length += mySegment->length;
-                prev_segment->next = mySegment->next;
+			// Intento hacer la fusión con el segmento anterior si esta vacio
+            if (prevSegment != NULL && prevSegment->status == STATUS_VACIO) {
+                prevSegment->length += mySegment->length;
+                prevSegment->next = mySegment->next;
                 free(mySegment);
-                mySegment = prev_segment;
+                mySegment = prevSegment;
             }
-            
-            printf("Planta removida en [%d,%d]\n", row, col);
-            break;
+            break; // Si "terminé mi cometido" termino el loop, no busco más nada
         }
         
-        prev_segment = mySegment;
+        prevSegment = mySegment; // Cuando avanzo 1, mi "segmento anterior" se va a convertir en el que estoy ahora
         mySegment = mySegment->next;
     }
     
@@ -216,82 +213,99 @@ void gameBoardRemovePlant(GameBoard* board, int row, int col) {
 }
 
 int gameBoardAddPlant(GameBoard* board, int row, int col) {
-    // TODO: Encontrar la GardenRow correcta. ✓
-    // TODO: Recorrer la lista de RowSegment hasta encontrar el segmento VACIO que contenga a `col`. ✓
-    // TODO: Si se encuentra y tiene espacio, realizar la lógica de DIVISIÓN de segmento.
+    
     // TODO: Crear la nueva `Planta` con memoria dinámica y asignarla al `planta_data` del nuevo segmento.
 
     RowSegment* mySegment = board->rows[row].first_segment;
-    RowSegment* prev_segment = NULL;
+    RowSegment* prevSegment = NULL;
     
+	// Itero por mis segmentos hasta encontrar la que pertenece al rango que quiero
     while (mySegment != NULL) {
-        int seg_end = mySegment->start_col + mySegment->length;
-        
-        if (mySegment->start_col <= col && col < seg_end) {
+		// TODO: Encontrar la GardenRow correcta. 
+
+        if (mySegment->start_col <= col && col < (mySegment->start_col + mySegment->length)) {
+			// ¿Está realmente vacio?
             if (mySegment->status != STATUS_VACIO) {
+				/*
+					Si no está vacio podemos implementar gameBoardRemovePlant
+					Si no queremos que la logica funcione de esta manera podemos comentar la función 
+					La diferencia que tiene comentar la función es que ninguna planta se va a eliminar
+					De esta forma la lista no será alterada y la fusión de los segmentos de 
+					gameBoardRemovePlant no se van a hacer
+					Por ende, no nos podemos "arrepentir" de poner una planta en ningun lado
+				*/
                 gameBoardRemovePlant(board, row, col);
                 return 0;
             }
+			
+    		// TODO: Recorrer la lista de RowSegment hasta encontrar el segmento VACIO que contenga a `col`.
+			// Solo llega aca si efectivamente esta vacio
+			// Inicializo una nueva planta de la misma forma que en el juego_base.c
+            Planta* newPlant = (Planta*)malloc(sizeof(Planta));
+            if (!newPlant) return 0;
             
-            Planta* new_plant = (Planta*)malloc(sizeof(Planta));
-            if (!new_plant) return 0;
+            newPlant->rect.x = GRID_OFFSET_X + (col * CELL_WIDTH);
+            newPlant->rect.y = GRID_OFFSET_Y + (row * CELL_HEIGHT);
+            newPlant->rect.w = CELL_WIDTH;
+            newPlant->rect.h = CELL_HEIGHT;
+            newPlant->activo = 1;
+            newPlant->cooldown = rand() % 100;
+            newPlant->current_frame = 0;
+            newPlant->frame_timer = 0;
+            newPlant->debe_disparar = 0;
             
-            new_plant->rect.x = GRID_OFFSET_X + (col * CELL_WIDTH);
-            new_plant->rect.y = GRID_OFFSET_Y + (row * CELL_HEIGHT);
-            new_plant->rect.w = CELL_WIDTH;
-            new_plant->rect.h = CELL_HEIGHT;
-            new_plant->activo = 1;
-            new_plant->cooldown = rand() % 100;
-            new_plant->current_frame = 0;
-            new_plant->frame_timer = 0;
-            new_plant->debe_disparar = 0;
-            
+			
+    		// TODO: Si se encuentra y tiene espacio, realizar la lógica de DIVISIÓN de segmento.
+			// Lo separo por casos
+
+			// Caso 1: Mi segmento ya tiene una sola celda
+			// En ese caso inserto mi nueva planta en el segmento directamente
             if (mySegment->length == 1) {
                 mySegment->status = STATUS_PLANTA;
-                mySegment->planta_data = new_plant;
-                printf("Planta agregada en segmento de 1 celda [%d,%d]\n", row, col);
+                mySegment->planta_data = newPlant;
                 return 1;
             }
             
+			// Caso 2: Debo insertar la planta al inicio del segmento
             if (col == mySegment->start_col) {
-                RowSegment* nuevo_seg = (RowSegment*)malloc(sizeof(RowSegment));
-                if (!nuevo_seg) {
-                    free(new_plant);
+                RowSegment* newSegment = (RowSegment*)malloc(sizeof(RowSegment));
+                if (!newSegment) {
+                    free(newPlant);
                     return 0;
                 }
-                nuevo_seg->status = STATUS_PLANTA;
-                nuevo_seg->start_col = col;
-                nuevo_seg->length = 1;
-                nuevo_seg->planta_data = new_plant;
-                nuevo_seg->next = mySegment;
+                newSegment->status = STATUS_PLANTA;
+                newSegment->start_col = col;
+                newSegment->length = 1;
+                newSegment->planta_data = newPlant;
+                newSegment->next = mySegment;
                 
                 mySegment->start_col = col + 1;
                 mySegment->length--;
                 
-                if (prev_segment == NULL) {
-                    board->rows[row].first_segment = nuevo_seg;
+                if (prevSegment == NULL) {
+                    board->rows[row].first_segment = newSegment;
                 } else {
-                    prev_segment->next = nuevo_seg;
+                    prevSegment->next = newSegment;
                 }
                 
                 printf("Planta agregada al inicio del segmento [%d,%d]\n", row, col);
                 return 1;
             }
             
-            if (col == seg_end - 1) {
-                RowSegment* nuevo_seg = (RowSegment*)malloc(sizeof(RowSegment));
-                if (!nuevo_seg) {
-                    free(new_plant);
+            if (col == ultSegment - 1) {
+                RowSegment* newSegment = (RowSegment*)malloc(sizeof(RowSegment));
+                if (!newSegment) {
+                    free(newPlant);
                     return 0;
                 }
-                nuevo_seg->status = STATUS_PLANTA;
-                nuevo_seg->start_col = col;
-                nuevo_seg->length = 1;
-                nuevo_seg->planta_data = new_plant;
-                nuevo_seg->next = mySegment->next;
+                newSegment->status = STATUS_PLANTA;
+                newSegment->start_col = col;
+                newSegment->length = 1;
+                newSegment->planta_data = newPlant;
+                newSegment->next = mySegment->next;
                 
                 mySegment->length--;
-                mySegment->next = nuevo_seg;
+                mySegment->next = newSegment;
                 
                 printf("Planta agregada al final del segmento [%d,%d]\n", row, col);
                 return 1;
@@ -300,7 +314,7 @@ int gameBoardAddPlant(GameBoard* board, int row, int col) {
             RowSegment* seg_planta = (RowSegment*)malloc(sizeof(RowSegment));
             RowSegment* seg_derecha = (RowSegment*)malloc(sizeof(RowSegment));
             if (!seg_planta || !seg_derecha) {
-                free(new_plant);
+                free(newPlant);
                 if (seg_planta) free(seg_planta);
                 if (seg_derecha) free(seg_derecha);
                 return 0;
@@ -309,11 +323,11 @@ int gameBoardAddPlant(GameBoard* board, int row, int col) {
             seg_planta->status = STATUS_PLANTA;
             seg_planta->start_col = col;
             seg_planta->length = 1;
-            seg_planta->planta_data = new_plant;
+            seg_planta->planta_data = newPlant;
             
             seg_derecha->status = STATUS_VACIO;
             seg_derecha->start_col = col + 1;
-            seg_derecha->length = seg_end - (col + 1);
+            seg_derecha->length = ultSegment - (col + 1);
             seg_derecha->planta_data = NULL;
             seg_derecha->next = mySegment->next;
             
@@ -325,7 +339,7 @@ int gameBoardAddPlant(GameBoard* board, int row, int col) {
             return 1;
         }
         
-        prev_segment = mySegment;
+        prevSegment = mySegment;
         mySegment = mySegment->next;
     }
     
@@ -337,7 +351,7 @@ void gameBoardAddZombie(GameBoard* board, int row) {
     // TODO: Crear un nuevo ZombieNode con memoria dinámica.
     // TODO: Inicializar sus datos (posición, vida, animación, etc.).
     // TODO: Agregarlo a la lista enlazada simple de la GardenRow correspondiente.
-    if (!board) return;
+    
     
     ZombieNode* newZombie = (ZombieNode*)malloc(sizeof(ZombieNode));
     if (!newZombie) {
@@ -373,8 +387,6 @@ int gameBoardUpdate(GameBoard* board) {
     // TODO: Recorrer las listas de zombies de cada fila para moverlos y animarlos.
     // TODO: Recorrer las listas de segmentos de cada fila para gestionar los cooldowns y animaciones de las plantas.
     // TODO: Actualizar la lógica de disparo, colisiones y spawn de zombies.
-
-    if (!board) return 0;
 
     for (int row = 0; row < GRID_ROWS; row++) {
         ZombieNode* zombieNode = board->rows[row].first_zombie;
@@ -509,7 +521,6 @@ void gameBoardDraw(GameBoard* board) {
     // TODO: Recorrer las listas de segmentos para dibujar las plantas.
     // TODO: Recorrer las listas de zombies para dibujarlos.
     // TODO: Dibujar las arvejas y el cursor.
-    if (!board) return;
     
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, tex_background, NULL, NULL);
@@ -617,8 +628,8 @@ int main(int argc, char* args[]) {
 
         // TODO: Agregar la lógica para ver si un zombie llegó a la casa y terminó el juego
         int is_game_over = gameBoardUpdate(game_board);
-        if (is_game_over) {
-            game_over = 1;
+        if (is_game_over == 1) { // gameBoardUpdate devuelve 1 cuando el zombie llega a la casa
+            game_over = 1; // Se corta el while 
         }
         gameBoardDraw(game_board);
 
