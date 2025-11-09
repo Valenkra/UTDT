@@ -813,7 +813,7 @@ int main(int argc, char* args[]) {
             }
         }
 
-        //gameBoardUpdate(game_board);
+        gameBoardUpdate(game_board);
         gameBoardDraw(game_board);
 
         // TODO: Agregar la lógica para ver si un zombie llegó a la casa y terminó el juego
