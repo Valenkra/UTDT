@@ -406,153 +406,13 @@ void gameBoardAddZombie(GameBoard* board, int row) {
         current->next = new_zombie;
     }
 }
-/*
-void gameBoardUpdate(GameBoard* board) {
-    if (!board) return;
+
+int gameBoardUpdate(GameBoard* board) {
     // TODO: Re-implementar la lógica de `actualizarEstado` usando las nuevas estructuras.
     // TODO: Recorrer las listas de zombies de cada fila para moverlos y animarlos.
     // TODO: Recorrer las listas de segmentos de cada fila para gestionar los cooldowns y animaciones de las plantas.
     // TODO: Actualizar la lógica de disparo, colisiones y spawn de zombies.
 
-    // ========= ACTUALIZAR ZOMBIES =========
-    for (int row = 0; row < GRID_ROWS; row++) {
-        ZombieNode* zombie_node = board->rows[row].first_zombie;
-        ZombieNode* prev_zombie = NULL;
-
-        while (zombie_node != NULL) {
-            Zombie* z = &zombie_node->zombie_data;
-            
-            if (z->activo) {
-                // Mover zombie
-                float distance_per_tick = ZOMBIE_DISTANCE_PER_CYCLE / (float)(ZOMBIE_TOTAL_FRAMES * ZOMBIE_ANIMATION_SPEED);
-                z->pos_x -= distance_per_tick;
-                z->rect.x = (int)z->pos_x;
-                
-                // Actualizar animación
-                z->frame_timer++;
-                if (z->frame_timer >= ZOMBIE_ANIMATION_SPEED) {
-                    z->frame_timer = 0;
-                    z->current_frame = (z->current_frame + 1) % ZOMBIE_TOTAL_FRAMES;
-                }
-            }
-
-            // Remover zombie si está inactivo
-            if (!z->activo) {
-                ZombieNode* to_delete = zombie_node;
-                if (prev_zombie == NULL) {
-                    board->rows[row].first_zombie = zombie_node->next;
-                    zombie_node = zombie_node->next;
-                } else {
-                    prev_zombie->next = zombie_node->next;
-                    zombie_node = zombie_node->next;
-                }
-                free(to_delete);
-            } else {
-                prev_zombie = zombie_node;
-                zombie_node = zombie_node->next;
-            }
-        }
-    }
-
-    // ========= ACTUALIZAR PLANTAS =========
-    for (int row = 0; row < GRID_ROWS; row++) {
-        RowSegment* segment = board->rows[row].first_segment;
-        
-        while (segment != NULL) {
-            if (segment->status == STATUS_PLANTA && segment->planta_data != NULL) {
-                Planta* p = segment->planta_data;
-                
-                // Actualizar cooldown
-                if (p->cooldown > 0) {
-                    p->cooldown--;
-                } else {
-                    p->debe_disparar = 1;
-                }
-                
-                // Actualizar animación
-                p->frame_timer++;
-                if (p->frame_timer >= PEASHOOTER_ANIMATION_SPEED) {
-                    p->frame_timer = 0;
-                    p->current_frame = (p->current_frame + 1) % PEASHOOTER_TOTAL_FRAMES;
-                    
-                    // Disparar en el frame correcto
-                    if (p->debe_disparar && p->current_frame == PEASHOOTER_SHOOT_FRAME) {
-                        // Buscar una arveja inactiva
-                        for (int i = 0; i < MAX_ARVEJAS; i++) {
-                            if (!board->arvejas[i].activo) {
-                                board->arvejas[i].rect.x = p->rect.x + (CELL_WIDTH / 2);
-                                board->arvejas[i].rect.y = p->rect.y + (CELL_HEIGHT / 4);
-                                board->arvejas[i].rect.w = 20;
-                                board->arvejas[i].rect.h = 20;
-                                board->arvejas[i].activo = 1;
-                                break;
-                            }
-                        }
-                        p->cooldown = 120;
-                        p->debe_disparar = 0;
-                    }
-                }
-            }
-            segment = segment->next;
-        }
-    }
-
-    // ========= ACTUALIZAR ARVEJAS =========
-    for (int i = 0; i < MAX_ARVEJAS; i++) {
-        if (board->arvejas[i].activo) {
-            board->arvejas[i].rect.x += PEA_SPEED;
-            
-            // Desactivar si sale de la pantalla
-            if (board->arvejas[i].rect.x > SCREEN_WIDTH) {
-                board->arvejas[i].activo = 0;
-            }
-        }
-    }
-
-    // ========= DETECTAR COLISIONES =========
-    for (int row = 0; row < GRID_ROWS; row++) {
-        ZombieNode* zombie_node = board->rows[row].first_zombie;
-        
-        while (zombie_node != NULL) {
-            if (!zombie_node->zombie_data.activo) {
-                zombie_node = zombie_node->next;
-                continue;
-            }
-            
-            for (int j = 0; j < MAX_ARVEJAS; j++) {
-                if (!board->arvejas[j].activo) continue;
-                
-                // Calcular la fila de la arveja
-                int arveja_row = (board->arvejas[j].rect.y - GRID_OFFSET_Y) / CELL_HEIGHT;
-                
-                // Solo verificar colisión si están en la misma fila
-                if (zombie_node->zombie_data.row == arveja_row) {
-                    if (SDL_HasIntersection(&board->arvejas[j].rect, &zombie_node->zombie_data.rect)) {
-                        board->arvejas[j].activo = 0;
-                        zombie_node->zombie_data.vida -= 25;
-                        if (zombie_node->zombie_data.vida <= 0) {
-                            zombie_node->zombie_data.activo = 0;
-                        }
-                    }
-                }
-            }
-            
-            zombie_node = zombie_node->next;
-        }
-    }
-
-    // ========= SPAWN DE ZOMBIES =========
-    board->zombie_spawn_timer--;
-    if (board->zombie_spawn_timer <= 0) {
-        int random_row = rand() % GRID_ROWS;
-        gameBoardAddZombie(board, random_row);
-        board->zombie_spawn_timer = ZOMBIE_SPAWN_RATE;
-    }
-
-}
-*/
-
-int gameBoardUpdate(GameBoard* board) {
     if (!board) return 0;
 
     // ========= ACTUALIZAR ZOMBIES =========
@@ -570,7 +430,7 @@ int gameBoardUpdate(GameBoard* board) {
                 z->rect.x = (int)z->pos_x;
                 
                 // VERIFICAR GAME OVER - Zombie llegó demasiado cerca (menos de 300px desde la izquierda)
-                if (z->rect.x < 300) {
+                if (z->rect.x < 130) {
                     printf("¡GAME OVER! Un zombie llegó a tu casa en la fila %d\n", row);
                     return 1; // Retorna 1 para indicar game over
                 }
@@ -813,7 +673,11 @@ int main(int argc, char* args[]) {
             }
         }
 
-        gameBoardUpdate(game_board);
+        //gameBoardUpdate(game_board);
+        int is_game_over = gameBoardUpdate(game_board);
+        if (is_game_over) {
+            game_over = 1;
+        }
         gameBoardDraw(game_board);
 
         // TODO: Agregar la lógica para ver si un zombie llegó a la casa y terminó el juego
