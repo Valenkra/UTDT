@@ -550,6 +550,9 @@ void cerrar() {
     SDL_Quit();
 }
 
+void testCases(){
+    
+}
 
 int main(int argc, char* args[]) {
     srand(time(NULL));
