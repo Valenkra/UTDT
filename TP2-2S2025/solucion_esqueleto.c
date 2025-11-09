@@ -310,46 +310,63 @@ void gameBoardRemovePlant(GameBoard* board, int row, int col) {
     // TODO: Similar a AddPlant, encontrar el segmento que contiene `col`.
     // TODO: Si es un segmento de tipo PLANTA, convertirlo a VACIO y liberar el `planta_data`.
     // TODO: Implementar la lógica de FUSIÓN con los segmentos vecinos si también son VACIO.
-    printf("Función gameBoardRemovePlant no implementada.\n");
+    if (!board) return;
+    
+    // Encontrar el segmento que contiene la columna especificada
+    RowSegment* segment = board->rows[row].first_segment;
+    RowSegment* prev_segment = NULL;
+    
+    while (segment != NULL) {
+        int seg_end = segment->start_col + segment->length;
+        
+        // Verificar si este segmento contiene la columna
+        if (segment->start_col <= col && col < seg_end) {
+            // Verificar que sea un segmento de planta
+            if (segment->status != STATUS_PLANTA) {
+                printf("No hay planta en esta celda para remover.\n");
+                return;
+            }
+            
+            // Liberar la memoria de la planta
+            if (segment->planta_data != NULL) {
+                free(segment->planta_data);
+                segment->planta_data = NULL;
+            }
+            
+            // Convertir el segmento a VACIO
+            segment->status = STATUS_VACIO;
+            
+            // FUSIÓN: Intentar fusionar con el segmento siguiente si es VACIO
+            if (segment->next != NULL && segment->next->status == STATUS_VACIO) {
+                RowSegment* next_seg = segment->next;
+                segment->length += next_seg->length;
+                segment->next = next_seg->next;
+                free(next_seg);
+            }
+            
+            // FUSIÓN: Intentar fusionar con el segmento anterior si es VACIO
+            if (prev_segment != NULL && prev_segment->status == STATUS_VACIO) {
+                prev_segment->length += segment->length;
+                prev_segment->next = segment->next;
+                free(segment);
+                segment = prev_segment;
+            }
+            
+            printf("Planta removida en [%d,%d]\n", row, col);
+            return;
+        }
+        
+        prev_segment = segment;
+        segment = segment->next;
+    }
+    
+    printf("No se encontró segmento que contenga la columna %d\n", col);
 }
 
-/*
 void gameBoardAddZombie(GameBoard* board, int row) {
     // TODO: Crear un nuevo ZombieNode con memoria dinámica.
     // TODO: Inicializar sus datos (posición, vida, animación, etc.).
     // TODO: Agregarlo a la lista enlazada simple de la GardenRow correspondiente.
-
-    ZombieNode* new_zombie = (ZombieNode*)malloc(sizeof(ZombieNode));
-    if (!new_zombie) {
-        printf("Error al crear nuevo zombie.\n");
-        return;
-    }
-
-    // Inicializar datos del zombie
-    new_zombie->zombie_data.pos_x = GRID_WIDTH;
-    new_zombie->zombie_data.row = row;
-    new_zombie->zombie_data.vida = 100;
-    new_zombie->zombie_data.activo = 1;
-    new_zombie->zombie_data.current_frame = 0;
-    new_zombie->zombie_data.frame_timer = 0;
-    new_zombie->next = NULL;
-
-    // Agregar a la lista de zombies de la fila correspondiente
-    if (!board->rows[row].first_zombie) {
-        board->rows[row].first_zombie = new_zombie;
-    } else {
-        ZombieNode* last = board->rows[row].first_zombie;
-        while (last->next) {
-            last = last->next;
-        }
-        last->next = new_zombie;
-    }
-
-    printf("Función gameBoardAddZombie no implementada.\n");
-}
-*/
-
-void gameBoardAddZombie(GameBoard* board, int row) {
     if (!board) return;
     
     // Crear un nuevo ZombieNode con memoria dinámica
