@@ -159,11 +159,11 @@ void gameBoardDelete(GameBoard* board) {
         }
         
         // Liberar todos los zombies de la fila
-        ZombieNode* zombie_node = board->rows[i].first_zombie;
-        while (zombie_node != NULL) {
-            ZombieNode* next_zombie = zombie_node->next;
-            free(zombie_node);
-            zombie_node = next_zombie;
+        ZombieNode* zombieNode = board->rows[i].first_zombie;
+        while (zombieNode != NULL) {
+            ZombieNode* next_zombie = zombieNode->next;
+            free(zombieNode);
+            zombieNode = next_zombie;
         }
     }
     
@@ -374,36 +374,36 @@ void gameBoardAddZombie(GameBoard* board, int row) {
     if (!board) return;
     
     // Crear un nuevo ZombieNode con memoria dinámica
-    ZombieNode* new_zombie = (ZombieNode*)malloc(sizeof(ZombieNode));
-    if (!new_zombie) {
+    ZombieNode* newZombie = (ZombieNode*)malloc(sizeof(ZombieNode));
+    if (!newZombie) {
         printf("Error: No se pudo asignar memoria para el zombie.\n");
         return;
     }
 
     // Inicializar datos del zombie
-    new_zombie->zombie_data.row = row;
-    new_zombie->zombie_data.pos_x = SCREEN_WIDTH;
-    new_zombie->zombie_data.rect.x = (int)new_zombie->zombie_data.pos_x;
-    new_zombie->zombie_data.rect.y = GRID_OFFSET_Y + (row * CELL_HEIGHT);
-    new_zombie->zombie_data.rect.w = CELL_WIDTH;
-    new_zombie->zombie_data.rect.h = CELL_HEIGHT;
-    new_zombie->zombie_data.vida = 100;
-    new_zombie->zombie_data.activo = 1;
-    new_zombie->zombie_data.current_frame = 0;
-    new_zombie->zombie_data.frame_timer = 0;
-    new_zombie->next = NULL;
+    newZombie->zombie_data.row = row;
+    newZombie->zombie_data.pos_x = SCREEN_WIDTH;
+    newZombie->zombie_data.rect.x = (int)newZombie->zombie_data.pos_x;
+    newZombie->zombie_data.rect.y = GRID_OFFSET_Y + (row * CELL_HEIGHT);
+    newZombie->zombie_data.rect.w = CELL_WIDTH;
+    newZombie->zombie_data.rect.h = CELL_HEIGHT;
+    newZombie->zombie_data.vida = 100;
+    newZombie->zombie_data.activo = 1;
+    newZombie->zombie_data.current_frame = 0;
+    newZombie->zombie_data.frame_timer = 0;
+    newZombie->next = NULL;
 
     // Agregar a la lista enlazada de zombies de la fila correspondiente
     if (board->rows[row].first_zombie == NULL) {
         // Si no hay zombies, este es el primero
-        board->rows[row].first_zombie = new_zombie;
+        board->rows[row].first_zombie = newZombie;
     } else {
         // Si ya hay zombies, agregarlo al final de la lista
         ZombieNode* current = board->rows[row].first_zombie;
         while (current->next != NULL) {
             current = current->next;
         }
-        current->next = new_zombie;
+        current->next = newZombie;
     }
 }
 
@@ -417,11 +417,11 @@ int gameBoardUpdate(GameBoard* board) {
 
     // ========= ACTUALIZAR ZOMBIES =========
     for (int row = 0; row < GRID_ROWS; row++) {
-        ZombieNode* zombie_node = board->rows[row].first_zombie;
+        ZombieNode* zombieNode = board->rows[row].first_zombie;
         ZombieNode* prev_zombie = NULL;
 
-        while (zombie_node != NULL) {
-            Zombie* z = &zombie_node->zombie_data;
+        while (zombieNode != NULL) {
+            Zombie* z = &zombieNode->zombie_data;
             
             if (z->activo) {
                 // Mover zombie
@@ -445,18 +445,18 @@ int gameBoardUpdate(GameBoard* board) {
 
             // Remover zombie si está inactivo
             if (!z->activo) {
-                ZombieNode* to_delete = zombie_node;
+                ZombieNode* to_delete = zombieNode;
                 if (prev_zombie == NULL) {
-                    board->rows[row].first_zombie = zombie_node->next;
-                    zombie_node = zombie_node->next;
+                    board->rows[row].first_zombie = zombieNode->next;
+                    zombieNode = zombieNode->next;
                 } else {
-                    prev_zombie->next = zombie_node->next;
-                    zombie_node = zombie_node->next;
+                    prev_zombie->next = zombieNode->next;
+                    zombieNode = zombieNode->next;
                 }
                 free(to_delete);
             } else {
-                prev_zombie = zombie_node;
-                zombie_node = zombie_node->next;
+                prev_zombie = zombieNode;
+                zombieNode = zombieNode->next;
             }
         }
     }
@@ -518,11 +518,11 @@ int gameBoardUpdate(GameBoard* board) {
 
     // ========= DETECTAR COLISIONES =========
     for (int row = 0; row < GRID_ROWS; row++) {
-        ZombieNode* zombie_node = board->rows[row].first_zombie;
+        ZombieNode* zombieNode = board->rows[row].first_zombie;
         
-        while (zombie_node != NULL) {
-            if (!zombie_node->zombie_data.activo) {
-                zombie_node = zombie_node->next;
+        while (zombieNode != NULL) {
+            if (!zombieNode->zombie_data.activo) {
+                zombieNode = zombieNode->next;
                 continue;
             }
             
@@ -533,18 +533,18 @@ int gameBoardUpdate(GameBoard* board) {
                 int arveja_row = (board->arvejas[j].rect.y - GRID_OFFSET_Y) / CELL_HEIGHT;
                 
                 // Solo verificar colisión si están en la misma fila
-                if (zombie_node->zombie_data.row == arveja_row) {
-                    if (SDL_HasIntersection(&board->arvejas[j].rect, &zombie_node->zombie_data.rect)) {
+                if (zombieNode->zombie_data.row == arveja_row) {
+                    if (SDL_HasIntersection(&board->arvejas[j].rect, &zombieNode->zombie_data.rect)) {
                         board->arvejas[j].activo = 0;
-                        zombie_node->zombie_data.vida -= 25;
-                        if (zombie_node->zombie_data.vida <= 0) {
-                            zombie_node->zombie_data.activo = 0;
+                        zombieNode->zombie_data.vida -= 25;
+                        if (zombieNode->zombie_data.vida <= 0) {
+                            zombieNode->zombie_data.activo = 0;
                         }
                     }
                 }
             }
             
-            zombie_node = zombie_node->next;
+            zombieNode = zombieNode->next;
         }
     }
 
@@ -586,17 +586,17 @@ void gameBoardDraw(GameBoard* board) {
 
     // Dibujo los zombies
     for (int row = 0; row < GRID_ROWS; row++) {
-        ZombieNode* zombie_node = board->rows[row].first_zombie;
+        ZombieNode* zombieNode = board->rows[row].first_zombie;
         
-        while (zombie_node != NULL) {
-            Zombie* z = &zombie_node->zombie_data;
+        while (zombieNode != NULL) {
+            Zombie* z = &zombieNode->zombie_data;
             
             if (z->activo) {
                 SDL_Rect src_rect = { z->current_frame * ZOMBIE_FRAME_WIDTH, 0, ZOMBIE_FRAME_WIDTH, ZOMBIE_FRAME_HEIGHT };
                 SDL_RenderCopy(renderer, tex_zombie_sheet, &src_rect, &z->rect);
             }
             
-            zombie_node = zombie_node->next;
+            zombieNode = zombieNode->next;
         }
     }
 
