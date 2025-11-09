@@ -313,6 +313,7 @@ void gameBoardRemovePlant(GameBoard* board, int row, int col) {
     printf("Función gameBoardRemovePlant no implementada.\n");
 }
 
+/*
 void gameBoardAddZombie(GameBoard* board, int row) {
     // TODO: Crear un nuevo ZombieNode con memoria dinámica.
     // TODO: Inicializar sus datos (posición, vida, animación, etc.).
@@ -345,6 +346,44 @@ void gameBoardAddZombie(GameBoard* board, int row) {
     }
 
     printf("Función gameBoardAddZombie no implementada.\n");
+}
+*/
+
+void gameBoardAddZombie(GameBoard* board, int row) {
+    if (!board) return;
+    
+    // Crear un nuevo ZombieNode con memoria dinámica
+    ZombieNode* new_zombie = (ZombieNode*)malloc(sizeof(ZombieNode));
+    if (!new_zombie) {
+        printf("Error: No se pudo asignar memoria para el zombie.\n");
+        return;
+    }
+
+    // Inicializar datos del zombie
+    new_zombie->zombie_data.row = row;
+    new_zombie->zombie_data.pos_x = SCREEN_WIDTH;
+    new_zombie->zombie_data.rect.x = (int)new_zombie->zombie_data.pos_x;
+    new_zombie->zombie_data.rect.y = GRID_OFFSET_Y + (row * CELL_HEIGHT);
+    new_zombie->zombie_data.rect.w = CELL_WIDTH;
+    new_zombie->zombie_data.rect.h = CELL_HEIGHT;
+    new_zombie->zombie_data.vida = 100;
+    new_zombie->zombie_data.activo = 1;
+    new_zombie->zombie_data.current_frame = 0;
+    new_zombie->zombie_data.frame_timer = 0;
+    new_zombie->next = NULL;
+
+    // Agregar a la lista enlazada de zombies de la fila correspondiente
+    if (board->rows[row].first_zombie == NULL) {
+        // Si no hay zombies, este es el primero
+        board->rows[row].first_zombie = new_zombie;
+    } else {
+        // Si ya hay zombies, agregarlo al final de la lista
+        ZombieNode* current = board->rows[row].first_zombie;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = new_zombie;
+    }
 }
 
 void gameBoardUpdate(GameBoard* board) {
