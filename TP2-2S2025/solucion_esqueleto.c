@@ -816,6 +816,7 @@ int main(int argc, char* args[]) {
         //gameBoardUpdate(game_board);
         int is_game_over = gameBoardUpdate(game_board);
         if (is_game_over) {
+            game_over = 1;
         }
         gameBoardDraw(game_board);
 
