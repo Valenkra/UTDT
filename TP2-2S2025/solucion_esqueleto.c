@@ -139,7 +139,36 @@ void gameBoardDelete(GameBoard* board) {
     // TODO: Liberar todos los RowSegment (y los planta_data si existen).
     // TODO: Liberar todos los ZombieNode.
     // TODO: Finalmente, liberar el GameBoard.
-    printf("Función gameBoardDelete no implementada.\n");
+    if (!board) return;
+    
+    // Liberar todos los recursos de cada fila
+    for (int i = 0; i < GRID_ROWS; i++) {
+        // Liberar todos los segmentos de la fila
+        RowSegment* segment = board->rows[i].first_segment;
+        while (segment != NULL) {
+            RowSegment* next_segment = segment->next;
+            
+            // Si el segmento tiene una planta, liberar su memoria
+            if (segment->planta_data != NULL) {
+                free(segment->planta_data);
+            }
+            
+            // Liberar el segmento
+            free(segment);
+            segment = next_segment;
+        }
+        
+        // Liberar todos los zombies de la fila
+        ZombieNode* zombie_node = board->rows[i].first_zombie;
+        while (zombie_node != NULL) {
+            ZombieNode* next_zombie = zombie_node->next;
+            free(zombie_node);
+            zombie_node = next_zombie;
+        }
+    }
+    
+    // Finalmente, liberar el GameBoard
+    free(board);
 }
 
 int gameBoardAddPlant(GameBoard* board, int row, int col) {
