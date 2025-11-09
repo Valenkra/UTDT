@@ -171,7 +171,6 @@ void gameBoardDelete(GameBoard* board) {
     free(board);
 }
 
-
 void gameBoardRemovePlant(GameBoard* board, int row, int col) {
     // TODO: Similar a AddPlant, encontrar el segmento que contiene `col`.
     // TODO: Si es un segmento de tipo PLANTA, convertirlo a VACIO y liberar el `planta_data`.
@@ -415,6 +414,274 @@ void gameBoardUpdate(GameBoard* board) {
     // TODO: Recorrer las listas de segmentos de cada fila para gestionar los cooldowns y animaciones de las plantas.
     // TODO: Actualizar la lógica de disparo, colisiones y spawn de zombies.
 
+    // ========= ACTUALIZAR ZOMBIES =========
+    for (int row = 0; row < GRID_ROWS; row++) {
+        ZombieNode* zombie_node = board->rows[row].first_zombie;
+        ZombieNode* prev_zombie = NULL;
+
+        while (zombie_node != NULL) {
+            Zombie* z = &zombie_node->zombie_data;
+            
+            if (z->activo) {
+                // Mover zombie
+                float distance_per_tick = ZOMBIE_DISTANCE_PER_CYCLE / (float)(ZOMBIE_TOTAL_FRAMES * ZOMBIE_ANIMATION_SPEED);
+                z->pos_x -= distance_per_tick;
+                z->rect.x = (int)z->pos_x;
+                
+                // Actualizar animación
+                z->frame_timer++;
+                if (z->frame_timer >= ZOMBIE_ANIMATION_SPEED) {
+                    z->frame_timer = 0;
+                    z->current_frame = (z->current_frame + 1) % ZOMBIE_TOTAL_FRAMES;
+                }
+            }
+
+            // Remover zombie si está inactivo
+            if (!z->activo) {
+                ZombieNode* to_delete = zombie_node;
+                if (prev_zombie == NULL) {
+                    board->rows[row].first_zombie = zombie_node->next;
+                    zombie_node = zombie_node->next;
+                } else {
+                    prev_zombie->next = zombie_node->next;
+                    zombie_node = zombie_node->next;
+                }
+                free(to_delete);
+            } else {
+                prev_zombie = zombie_node;
+                zombie_node = zombie_node->next;
+            }
+        }
+    }
+
+    // ========= ACTUALIZAR PLANTAS =========
+    for (int row = 0; row < GRID_ROWS; row++) {
+        RowSegment* segment = board->rows[row].first_segment;
+        
+        while (segment != NULL) {
+            if (segment->status == STATUS_PLANTA && segment->planta_data != NULL) {
+                Planta* p = segment->planta_data;
+                
+                // Actualizar cooldown
+                if (p->cooldown > 0) {
+                    p->cooldown--;
+                } else {
+                    p->debe_disparar = 1;
+                }
+                
+                // Actualizar animación
+                p->frame_timer++;
+                if (p->frame_timer >= PEASHOOTER_ANIMATION_SPEED) {
+                    p->frame_timer = 0;
+                    p->current_frame = (p->current_frame + 1) % PEASHOOTER_TOTAL_FRAMES;
+                    
+                    // Disparar en el frame correcto
+                    if (p->debe_disparar && p->current_frame == PEASHOOTER_SHOOT_FRAME) {
+                        // Buscar una arveja inactiva
+                        for (int i = 0; i < MAX_ARVEJAS; i++) {
+                            if (!board->arvejas[i].activo) {
+                                board->arvejas[i].rect.x = p->rect.x + (CELL_WIDTH / 2);
+                                board->arvejas[i].rect.y = p->rect.y + (CELL_HEIGHT / 4);
+                                board->arvejas[i].rect.w = 20;
+                                board->arvejas[i].rect.h = 20;
+                                board->arvejas[i].activo = 1;
+                                break;
+                            }
+                        }
+                        p->cooldown = 120;
+                        p->debe_disparar = 0;
+                    }
+                }
+            }
+            segment = segment->next;
+        }
+    }
+
+    // ========= ACTUALIZAR ARVEJAS =========
+    for (int i = 0; i < MAX_ARVEJAS; i++) {
+        if (board->arvejas[i].activo) {
+            board->arvejas[i].rect.x += PEA_SPEED;
+            
+            // Desactivar si sale de la pantalla
+            if (board->arvejas[i].rect.x > SCREEN_WIDTH) {
+                board->arvejas[i].activo = 0;
+            }
+        }
+    }
+
+    // ========= DETECTAR COLISIONES =========
+    for (int row = 0; row < GRID_ROWS; row++) {
+        ZombieNode* zombie_node = board->rows[row].first_zombie;
+        
+        while (zombie_node != NULL) {
+            if (!zombie_node->zombie_data.activo) {
+                zombie_node = zombie_node->next;
+                continue;
+            }
+            
+            for (int j = 0; j < MAX_ARVEJAS; j++) {
+                if (!board->arvejas[j].activo) continue;
+                
+                // Calcular la fila de la arveja
+                int arveja_row = (board->arvejas[j].rect.y - GRID_OFFSET_Y) / CELL_HEIGHT;
+                
+                // Solo verificar colisión si están en la misma fila
+                if (zombie_node->zombie_data.row == arveja_row) {
+                    if (SDL_HasIntersection(&board->arvejas[j].rect, &zombie_node->zombie_data.rect)) {
+                        board->arvejas[j].activo = 0;
+                        zombie_node->zombie_data.vida -= 25;
+                        if (zombie_node->zombie_data.vida <= 0) {
+                            zombie_node->zombie_data.activo = 0;
+                        }
+                    }
+                }
+            }
+            
+            zombie_node = zombie_node->next;
+        }
+    }
+
+    // ========= SPAWN DE ZOMBIES =========
+    board->zombie_spawn_timer--;
+    if (board->zombie_spawn_timer <= 0) {
+        int random_row = rand() % GRID_ROWS;
+        gameBoardAddZombie(board, random_row);
+        board->zombie_spawn_timer = ZOMBIE_SPAWN_RATE;
+    }
+
+}
+
+void gameBoardDraw(GameBoard* board) {
+    if (!board) return;
+    
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, tex_background, NULL, NULL);
+
+    // TODO: Re-implementar la lógica de `dibujar` usando las nuevas estructuras.
+    // TODO: Recorrer las listas de segmentos para dibujar las plantas.
+    // TODO: Recorrer las listas de zombies para dibujarlos.
+    // TODO: Dibujar las arvejas y el cursor.
+
+    // Dibujo las plantas
+    for (int row = 0; row < GRID_ROWS; row++) {
+        RowSegment* segment = board->rows[row].first_segment;
+        
+        while (segment != NULL) {
+            if (segment->status == STATUS_PLANTA && segment->planta_data != NULL) {
+                Planta* p = segment->planta_data;
+                SDL_Rect src_rect = { p->current_frame * PEASHOOTER_FRAME_WIDTH, 0, PEASHOOTER_FRAME_WIDTH, PEASHOOTER_FRAME_HEIGHT };
+                SDL_RenderCopy(renderer, tex_peashooter_sheet, &src_rect, &p->rect);
+            }
+            segment = segment->next;
+        }
+    }
+
+    // Dibujo los zombies
+    for (int row = 0; row < GRID_ROWS; row++) {
+        ZombieNode* zombie_node = board->rows[row].first_zombie;
+        
+        while (zombie_node != NULL) {
+            Zombie* z = &zombie_node->zombie_data;
+            
+            if (z->activo) {
+                SDL_Rect src_rect = { z->current_frame * ZOMBIE_FRAME_WIDTH, 0, ZOMBIE_FRAME_WIDTH, ZOMBIE_FRAME_HEIGHT };
+                SDL_RenderCopy(renderer, tex_zombie_sheet, &src_rect, &z->rect);
+            }
+            
+            zombie_node = zombie_node->next;
+        }
+    }
+
+    // Dibujo las arvejas 
+    for (int i = 0; i < MAX_ARVEJAS; i++) {
+        if (board->arvejas[i].activo) {
+            SDL_RenderCopy(renderer, tex_pea, NULL, &board->arvejas[i].rect);
+        }
+    }
+
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 200);
+    SDL_Rect cursor_rect = {GRID_OFFSET_X + cursor.col * CELL_WIDTH, GRID_OFFSET_Y + cursor.row * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT};
+    SDL_RenderDrawRect(renderer, &cursor_rect);
+    SDL_RenderPresent(renderer);
+}
+
+SDL_Texture* cargarTextura(const char* path) {
+    SDL_Texture* newTexture = IMG_LoadTexture(renderer, path);
+    if (newTexture == NULL) printf("No se pudo cargar la textura %s! SDL_image Error: %s\n", path, IMG_GetError());
+    return newTexture;
+}
+int inicializar() {
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) return 0;
+    window = SDL_CreateWindow("Plantas vs Zombies - Base para TP", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    if (window == NULL) return 0;
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (renderer == NULL) return 0;
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) return 0;
+    tex_background = cargarTextura("res/Frontyard.png");
+    tex_peashooter_sheet = cargarTextura("res/peashooter_sprite_sheet.png");
+    tex_zombie_sheet = cargarTextura("res/zombie_sprite_sheet.png");
+    tex_pea = cargarTextura("res/pea.png");
+    return 1;
+}
+void cerrar() {
+    SDL_DestroyTexture(tex_background);
+    SDL_DestroyTexture(tex_peashooter_sheet);
+    SDL_DestroyTexture(tex_zombie_sheet);
+    SDL_DestroyTexture(tex_pea);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    IMG_Quit();
+    SDL_Quit();
+}
+
+void testCases(){
+    
+}
+
+int main(int argc, char* args[]) {
+    srand(time(NULL));
+    if (!inicializar()) return 1;
+
+    game_board = gameBoardNew();
+
+    SDL_Event e;
+    int game_over = 0;
+
+    while (!game_over) {
+        while (SDL_PollEvent(&e) != 0) {
+            if (e.type == SDL_QUIT) game_over = 1;
+            if (e.type == SDL_MOUSEMOTION) {
+                int mouse_x = e.motion.x;
+                int mouse_y = e.motion.y;
+                if (mouse_x >= GRID_OFFSET_X && mouse_x < GRID_OFFSET_X + GRID_WIDTH &&
+                    mouse_y >= GRID_OFFSET_Y && mouse_y < GRID_OFFSET_Y + GRID_HEIGHT) {
+                    cursor.col = (mouse_x - GRID_OFFSET_X) / CELL_WIDTH;
+                    cursor.row = (mouse_y - GRID_OFFSET_Y) / CELL_HEIGHT;
+                }
+            }
+            if (e.type == SDL_MOUSEBUTTONDOWN) {
+                gameBoardAddPlant(game_board, cursor.row, cursor.col);
+            }
+        }
+
+        gameBoardUpdate(game_board);
+        gameBoardDraw(game_board);
+
+        // TODO: Agregar la lógica para ver si un zombie llegó a la casa y terminó el juego
+
+        SDL_Delay(16);
+    }
+
+    gameBoardDelete(game_board);
+    cerrar();
+    return 0;
+}
+
+
+/*gameBpardUpdate
+
+
     //  ACTUALIZAR ZOMBIES 
     for (int row = 0; row < GRID_ROWS; row++) {
         ZombieNode* zombie_node = board->rows[row].first_zombie;
@@ -554,131 +821,4 @@ void gameBoardUpdate(GameBoard* board) {
         gameBoardAddZombie(board, random_row);
         board->zombie_spawn_timer = ZOMBIE_SPAWN_RATE;
     }
-}
-
-void gameBoardDraw(GameBoard* board) {
-    if (!board) return;
-    
-    SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, tex_background, NULL, NULL);
-
-    // TODO: Re-implementar la lógica de `dibujar` usando las nuevas estructuras.
-    // TODO: Recorrer las listas de segmentos para dibujar las plantas.
-    // TODO: Recorrer las listas de zombies para dibujarlos.
-    // TODO: Dibujar las arvejas y el cursor.
-
-    // Dibujo las plantas
-    for (int row = 0; row < GRID_ROWS; row++) {
-        RowSegment* segment = board->rows[row].first_segment;
-        
-        while (segment != NULL) {
-            if (segment->status == STATUS_PLANTA && segment->planta_data != NULL) {
-                Planta* p = segment->planta_data;
-                SDL_Rect src_rect = { p->current_frame * PEASHOOTER_FRAME_WIDTH, 0, PEASHOOTER_FRAME_WIDTH, PEASHOOTER_FRAME_HEIGHT };
-                SDL_RenderCopy(renderer, tex_peashooter_sheet, &src_rect, &p->rect);
-            }
-            segment = segment->next;
-        }
-    }
-
-    // Dibujo los zombies
-    for (int row = 0; row < GRID_ROWS; row++) {
-        ZombieNode* zombie_node = board->rows[row].first_zombie;
-        
-        while (zombie_node != NULL) {
-            Zombie* z = &zombie_node->zombie_data;
-            
-            if (z->activo) {
-                SDL_Rect src_rect = { z->current_frame * ZOMBIE_FRAME_WIDTH, 0, ZOMBIE_FRAME_WIDTH, ZOMBIE_FRAME_HEIGHT };
-                SDL_RenderCopy(renderer, tex_zombie_sheet, &src_rect, &z->rect);
-            }
-            
-            zombie_node = zombie_node->next;
-        }
-    }
-
-    // Dibujo las arvejas 
-    for (int i = 0; i < MAX_ARVEJAS; i++) {
-        if (board->arvejas[i].activo) {
-            SDL_RenderCopy(renderer, tex_pea, NULL, &board->arvejas[i].rect);
-        }
-    }
-
-
-    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 200);
-    SDL_Rect cursor_rect = {GRID_OFFSET_X + cursor.col * CELL_WIDTH, GRID_OFFSET_Y + cursor.row * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT};
-    SDL_RenderDrawRect(renderer, &cursor_rect);
-    SDL_RenderPresent(renderer);
-}
-
-SDL_Texture* cargarTextura(const char* path) {
-    SDL_Texture* newTexture = IMG_LoadTexture(renderer, path);
-    if (newTexture == NULL) printf("No se pudo cargar la textura %s! SDL_image Error: %s\n", path, IMG_GetError());
-    return newTexture;
-}
-int inicializar() {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) return 0;
-    window = SDL_CreateWindow("Plantas vs Zombies - Base para TP", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-    if (window == NULL) return 0;
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (renderer == NULL) return 0;
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) return 0;
-    tex_background = cargarTextura("res/Frontyard.png");
-    tex_peashooter_sheet = cargarTextura("res/peashooter_sprite_sheet.png");
-    tex_zombie_sheet = cargarTextura("res/zombie_sprite_sheet.png");
-    tex_pea = cargarTextura("res/pea.png");
-    return 1;
-}
-void cerrar() {
-    SDL_DestroyTexture(tex_background);
-    SDL_DestroyTexture(tex_peashooter_sheet);
-    SDL_DestroyTexture(tex_zombie_sheet);
-    SDL_DestroyTexture(tex_pea);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    IMG_Quit();
-    SDL_Quit();
-}
-
-void testCases(){
-    
-}
-
-int main(int argc, char* args[]) {
-    srand(time(NULL));
-    if (!inicializar()) return 1;
-
-    game_board = gameBoardNew();
-
-    SDL_Event e;
-    int game_over = 0;
-
-    while (!game_over) {
-        while (SDL_PollEvent(&e) != 0) {
-            if (e.type == SDL_QUIT) game_over = 1;
-            if (e.type == SDL_MOUSEMOTION) {
-                int mouse_x = e.motion.x;
-                int mouse_y = e.motion.y;
-                if (mouse_x >= GRID_OFFSET_X && mouse_x < GRID_OFFSET_X + GRID_WIDTH &&
-                    mouse_y >= GRID_OFFSET_Y && mouse_y < GRID_OFFSET_Y + GRID_HEIGHT) {
-                    cursor.col = (mouse_x - GRID_OFFSET_X) / CELL_WIDTH;
-                    cursor.row = (mouse_y - GRID_OFFSET_Y) / CELL_HEIGHT;
-                }
-            }
-            if (e.type == SDL_MOUSEBUTTONDOWN) {
-                gameBoardAddPlant(game_board, cursor.row, cursor.col);
-            }
-        }
-
-        gameBoardUpdate(game_board);
-        gameBoardDraw(game_board);
-
-        // TODO: Agregar la lógica para ver si un zombie llegó a la casa y terminó el juego
-
-        SDL_Delay(16);
-    }
-
-    gameBoardDelete(game_board);
-    cerrar();
-    return 0;
-}
+*/
