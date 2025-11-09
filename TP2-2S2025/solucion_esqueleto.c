@@ -570,7 +570,7 @@ int gameBoardUpdate(GameBoard* board) {
                 z->rect.x = (int)z->pos_x;
                 
                 // VERIFICAR GAME OVER - Zombie llegó demasiado cerca (menos de 300px desde la izquierda)
-                if (z->rect.x < 300) {
+                if (z->rect.x < 100) {
                     printf("¡GAME OVER! Un zombie llegó a tu casa en la fila %d\n", row);
                     return 1; // Retorna 1 para indicar game over
                 }
