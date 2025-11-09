@@ -151,7 +151,7 @@ void gameBoardDelete(GameBoard* board) {
         // TODO: Liberar todos los ZombieNode.
         ZombieNode* zombieNode = board->rows[i].first_zombie;
         while (zombieNode != NULL) {
-            ZombieNode nextZombie = zombieNode->next;
+            ZombieNode* nextZombie = zombieNode->next;
             free(zombieNode);
             zombieNode = nextZombie;
         }
