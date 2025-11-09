@@ -1,3 +1,138 @@
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+//  CONSTANTES DEL JUEGO 
+#define SCREEN_WIDTH 900
+#define SCREEN_HEIGHT 500
+
+#define GRID_OFFSET_X 220
+#define GRID_OFFSET_Y 59
+#define GRID_WIDTH 650
+#define GRID_HEIGHT 425
+
+#define GRID_ROWS 5
+#define GRID_COLS 9
+#define CELL_WIDTH (GRID_WIDTH / GRID_COLS)
+#define CELL_HEIGHT (GRID_HEIGHT / GRID_ROWS)
+
+#define PEASHOOTER_FRAME_WIDTH 177
+#define PEASHOOTER_FRAME_HEIGHT 166
+#define PEASHOOTER_TOTAL_FRAMES 31
+#define PEASHOOTER_ANIMATION_SPEED 4
+#define PEASHOOTER_SHOOT_FRAME 18
+
+#define ZOMBIE_FRAME_WIDTH 164
+#define ZOMBIE_FRAME_HEIGHT 203
+#define ZOMBIE_TOTAL_FRAMES 90
+#define ZOMBIE_ANIMATION_SPEED 2
+#define ZOMBIE_DISTANCE_PER_CYCLE 40.0f
+
+#define MAX_ARVEJAS 100
+#define PEA_SPEED 5
+#define ZOMBIE_SPAWN_RATE 300
+
+
+//  ESTRUCTURAS DE DATOS 
+typedef struct {
+    int row, col;
+} Cursor;
+
+typedef struct {
+    SDL_Rect rect;
+    int activo;
+    int cooldown;
+    int current_frame;
+    int frame_timer;
+    int debe_disparar;
+} Planta;
+
+typedef struct {
+    SDL_Rect rect;
+    int activo;
+} Arveja;
+
+typedef struct {
+    SDL_Rect rect;
+    int activo;
+    int vida;
+    int row;
+    int current_frame;
+    int frame_timer;
+    float pos_x;
+} Zombie;
+
+//  NUEVAS ESTRUCTURAS 
+#define STATUS_VACIO 0
+#define STATUS_PLANTA 1
+
+typedef struct RowSegment {
+    int status;
+    int start_col;
+    int length;
+    Planta* planta_data;
+    struct RowSegment* next;
+} RowSegment;
+
+typedef struct ZombieNode {
+    Zombie zombie_data;
+    struct ZombieNode* next;
+} ZombieNode;
+
+typedef struct GardenRow {
+    RowSegment* first_segment;
+    ZombieNode* first_zombie;
+} GardenRow;
+
+typedef struct GameBoard {
+    GardenRow rows[GRID_ROWS];
+    Arveja arvejas[MAX_ARVEJAS]; //array adicional para manejar las arvejas
+    int zombie_spawn_timer; // variable para saber cada cuanto crear un zombie
+} GameBoard;
+
+
+//  VARIABLES GLOBALES 
+SDL_Window* window = NULL;
+SDL_Renderer* renderer = NULL;
+SDL_Texture* tex_background = NULL;
+SDL_Texture* tex_peashooter_sheet = NULL;
+SDL_Texture* tex_zombie_sheet = NULL;
+SDL_Texture* tex_pea = NULL;
+
+Cursor cursor = {0, 0};
+GameBoard* game_board = NULL;
+
+//  FUNCIONES 
+
+GameBoard* gameBoardNew() {
+    GameBoard* board = (GameBoard*)malloc(sizeof(GameBoard));
+    if (!board) return NULL;
+
+    board->zombie_spawn_timer = ZOMBIE_SPAWN_RATE;
+
+    for (int i = 0; i < GRID_ROWS; i++) {
+        RowSegment* first = (RowSegment*)malloc(sizeof(RowSegment));
+        if (!first) {
+            free(board);
+            return NULL;
+        }
+        first->status = STATUS_VACIO;
+        first->start_col = 0;
+        first->length = GRID_COLS;
+        first->planta_data = NULL;
+        first->next = NULL;
+
+        board->rows[i].first_segment = first;
+        board->rows[i].first_zombie = NULL;
+    }
+     for(int i = 0; i < MAX_ARVEJAS; i++) {
+        board->arvejas[i].activo = 0;
+    }
+    return board;
+}
+
 void gameBoardDelete(GameBoard* board) {
     // TODO: Liberar toda la memoria dinámica.
     // TODO: Recorrer cada GardenRow.
@@ -494,3 +629,7 @@ int main(int argc, char* args[]) {
     cerrar();
     return 0;
 }
+
+
+
+
