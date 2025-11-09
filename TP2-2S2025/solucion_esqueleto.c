@@ -670,6 +670,9 @@ int main(int argc, char* args[]) {
             }
             if (e.type == SDL_MOUSEBUTTONDOWN) {
                 gameBoardAddPlant(game_board, cursor.row, cursor.col);
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    printf("click izquierdo");
+                }
             }
         }
 
