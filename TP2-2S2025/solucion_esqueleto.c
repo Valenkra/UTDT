@@ -174,7 +174,6 @@ void gameBoardDelete(GameBoard* board) {
 void gameBoardRemovePlant(GameBoard* board, int row, int col) {
     // TODO: Similar a AddPlant, encontrar el segmento que contiene `col`.
     // TODO: Si es un segmento de tipo PLANTA, convertirlo a VACIO y liberar el `planta_data`.
-    // TODO: Implementar la lógica de FUSIÓN con los segmentos vecinos si también son VACIO.
     if (!board) return;
     
     // Encontrar el segmento que contiene la columna especificada
