@@ -693,7 +693,7 @@ char* strConcatenate(char* src1, char* src2) {
     }
 
     // Cerramos el nuevo string con ‘\0’
-    res[len1 + len2] = '/0';
+    res[len1 + len2] = '\0';
 
     // Liberamos la memoria original
     free(src1);
