@@ -653,8 +653,8 @@ int strCompare(char* s1, char* s2){
 	int i = 0;
 	while (s1[i] != '\0' && s2[i] != '\0') {
 	// Si el carácter de s1 es menor que el de s2, devolvemos 1. Si es mayor, -1.
-        if (s1[i] < s2[i]) return 1;
-        if (s1[i] > s2[i]) return -1;
+        if (s1[i] < s2[i]) return -1;
+        if (s1[i] > s2[i]) return 1;
         i++;
     }
 
@@ -662,8 +662,8 @@ int strCompare(char* s1, char* s2){
     if (s1[i] == '\0' && s2[i] == '\0') return 0;
 
 	// Si s1 termina antes, es menor. Si s2 termina antes, s1 es mayor.
-    if (s1[i] == '\0') return 1;  
-    else return -1;
+    if (s1[i] == '\0') return -1;  
+    else return 1;
 }
 
 char* strConcatenate(char* src1, char* src2) {
@@ -1225,7 +1225,7 @@ int main(int argc, char* args[]) {
 
 /*
     USO DE IA
-    - Estimamos que entre el 10% y 20% de las líneas de código fueron realizadas con 
+    - Estimamos que entre el 15% y 22% de las líneas de código fueron realizadas con 
     asistencia de herramientas de IA (principalmente ChatGPT)
 
     - Verificamos las sugerencias validando nosotras manualmente el comportamiento esperado
