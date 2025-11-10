@@ -1180,7 +1180,7 @@ void testGameBoardAddZombie() {
 
 int main(int argc, char* args[]) {
 	// AREA DE TESTING
-	/*
+	
 	printf("SOME TESTS!\n");
 	testStrDuplicate();
 	printf("\n");
@@ -1193,7 +1193,7 @@ int main(int argc, char* args[]) {
 	testGameBoardAddPlant();
 	printf("\n");
 	testGameBoardAddZombie();
-	*/
+	
 
     srand(time(NULL));
     if (!inicializar()) return 1;
