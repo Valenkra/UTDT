@@ -895,6 +895,279 @@ void testStrConcatenate() {
     }
 }
 
+void testGameBoardAddPlant() {
+    printf("CASOS DE TEST GAMEBOARD ADD PLANT \n");
+    
+    // TEST 1: Agregar planta en fila vacía - medio
+    printf("TEST 1: Agregar planta en fila vacía (columna del medio)\n");
+    GameBoard* board_test1 = gameBoardNew();
+    int resultado1 = gameBoardAddPlant(board_test1, 2, 4);
+    
+    printf("Resultado: %d\n", resultado1);
+    printf("Esperado: 1 (planta agregada exitosamente)\n");
+    
+    // Verificar que el segmento fue creado correctamente
+    RowSegment* seg = board_test1->rows[2].first_segment;
+    int planta_encontrada = 0;
+    while (seg != NULL) {
+        if (seg->status == STATUS_PLANTA && seg->start_col == 4) {
+            planta_encontrada = 1;
+            break;
+        }
+        seg = seg->next;
+    }
+    printf("%s\n", (resultado1 == 1 && planta_encontrada) ? "PASÓ" : "FALLÓ");
+    gameBoardDelete(board_test1);
+    
+    printf("\n");
+    
+    // TEST 2: Agregar planta en fila vacía - extremo izquierdo
+    printf("TEST 2: Agregar planta en fila vacía (columna 0)\n");
+    GameBoard* board_test2 = gameBoardNew();
+    int resultado2 = gameBoardAddPlant(board_test2, 1, 0);
+    
+    printf("Resultado: %d\n", resultado2);
+    printf("Esperado: 1 (planta agregada exitosamente)\n");
+    
+    seg = board_test2->rows[1].first_segment;
+    planta_encontrada = 0;
+    if (seg != NULL && seg->status == STATUS_PLANTA && seg->start_col == 0) {
+        planta_encontrada = 1;
+    }
+    printf("%s\n", (resultado2 == 1 && planta_encontrada) ? "PASÓ" : "FALLÓ");
+    gameBoardDelete(board_test2);
+    
+    printf("\n");
+
+    // TEST 3: Agregar planta en fila vacía - extremo derecho
+    printf("TEST 3: Agregar planta en fila vacía (columna 8)\n");
+    GameBoard* board_test3 = gameBoardNew();
+    int resultado3 = gameBoardAddPlant(board_test3, 0, 8);
+    
+    printf("Resultado: %d\n", resultado3);
+    printf("Esperado: 1 (planta agregada exitosamente)\n");
+    
+    seg = board_test3->rows[0].first_segment;
+    planta_encontrada = 0;
+    while (seg != NULL) {
+        if (seg->status == STATUS_PLANTA && seg->start_col == 8) {
+            planta_encontrada = 1;
+            break;
+        }
+        seg = seg->next;
+    }
+    printf("%s\n", (resultado3 == 1 && planta_encontrada) ? "PASÓ" : "FALLÓ");
+    gameBoardDelete(board_test3);
+    
+    printf("\n");
+
+    // TEST 4: Llenar una fila completa de plantas
+    printf("TEST 4: Llenar una fila completa de plantas\n");
+    GameBoard* board_test4 = gameBoardNew();
+    int todas_agregadas = 1;
+    
+    for (int col = 0; col < GRID_COLS; col++) {
+        int res = gameBoardAddPlant(board_test4, 3, col);
+        if (res != 1) {
+            todas_agregadas = 0;
+            break;
+        }
+    }
+    
+    printf("Resultado: %d plantas agregadas\n", todas_agregadas ? GRID_COLS : -1);
+    printf("Esperado: %d plantas\n", GRID_COLS);
+    
+    // Contar segmentos de tipo planta
+    int contador_plantas = 0;
+    seg = board_test4->rows[3].first_segment;
+    while (seg != NULL) {
+        if (seg->status == STATUS_PLANTA) {
+            contador_plantas++;
+        }
+        seg = seg->next;
+    }
+    
+    printf("Segmentos de plantas encontrados: %d\n", contador_plantas);
+    printf("%s\n", (todas_agregadas && contador_plantas == GRID_COLS) ? "PASÓ" : "FALLÓ");
+    gameBoardDelete(board_test4);
+    
+    printf("\n");
+
+    // TEST 5: Intentar agregar planta en celda ya ocupada
+    printf("TEST 5: Intentar agregar planta en celda ya ocupada\n");
+    GameBoard* board_test5 = gameBoardNew();
+    
+    int primer_add = gameBoardAddPlant(board_test5, 4, 5);
+    int segundo_add = gameBoardAddPlant(board_test5, 4, 5);
+    
+    printf("Primera inserción: %d\n", primer_add);
+    printf("Segunda inserción: %d\n", segundo_add);
+    printf("Esperado: primera = 1, segunda = 0 (ya ocupada)\n");
+    printf("%s\n", (primer_add == 1 && segundo_add == 0) ? "PASÓ" : "FALLÓ");
+    gameBoardDelete(board_test5);
+}
+
+void testGameBoardRemovePlant() {
+    printf("CASOS DE TEST GAMEBOARD REMOVE PLANT \n");
+    
+    // TEST 1: Plantar en columnas 3, 4 y 5, luego sacar la de columna 4
+    printf("TEST 1: Plantar en columnas 3, 4 y 5. Sacar la planta de columna 4\n");
+    GameBoard* board_test1 = gameBoardNew();
+    
+    gameBoardAddPlant(board_test1, 2, 3);
+    gameBoardAddPlant(board_test1, 2, 4);
+    gameBoardAddPlant(board_test1, 2, 5);
+    
+    printf("Plantas agregadas en columnas 3, 4 y 5\n");
+    
+    gameBoardRemovePlant(board_test1, 2, 4);
+    
+    // Verificar que la planta en columna 4 fue removida
+    RowSegment* seg = board_test1->rows[2].first_segment;
+    int planta_en_4 = 0;
+    int planta_en_3 = 0;
+    int planta_en_5 = 0;
+    
+    while (seg != NULL) {
+        if (seg->status == STATUS_PLANTA) {
+            if (seg->start_col == 3) planta_en_3 = 1;
+            if (seg->start_col == 4) planta_en_4 = 1;
+            if (seg->start_col == 5) planta_en_5 = 1;
+        }
+        seg = seg->next;
+    }
+    
+    printf("Planta en col 3: %s\n", planta_en_3 ? "Sí" : "No");
+    printf("Planta en col 4: %s\n", planta_en_4 ? "Sí" : "No");
+    printf("Planta en col 5: %s\n", planta_en_5 ? "Sí" : "No");
+    printf("Esperado: col 3 = Sí, col 4 = No, col 5 = Sí\n");
+    printf("%s\n", (planta_en_3 && !planta_en_4 && planta_en_5) ? "PASÓ" : "FALLÓ");
+    gameBoardDelete(board_test1);
+    
+    printf("\n");
+    
+    // TEST 2: Siguiendo el caso anterior, sacar luego la planta en columna 3
+    printf("TEST 2: Plantar en 3, 4 y 5. Sacar 4, luego sacar 3\n");
+    GameBoard* board_test2 = gameBoardNew();
+    
+    gameBoardAddPlant(board_test2, 1, 3);
+    gameBoardAddPlant(board_test2, 1, 4);
+    gameBoardAddPlant(board_test2, 1, 5);
+    
+    gameBoardRemovePlant(board_test2, 1, 4);
+    gameBoardRemovePlant(board_test2, 1, 3);
+    
+    // Verificar estado final
+    seg = board_test2->rows[1].first_segment;
+    planta_en_3 = 0;
+    planta_en_4 = 0;
+    planta_en_5 = 0;
+    
+    while (seg != NULL) {
+        if (seg->status == STATUS_PLANTA) {
+            if (seg->start_col == 3) planta_en_3 = 1;
+            if (seg->start_col == 4) planta_en_4 = 1;
+            if (seg->start_col == 5) planta_en_5 = 1;
+        }
+        seg = seg->next;
+    }
+    
+    printf("Planta en col 3: %s\n", planta_en_3 ? "Sí" : "No");
+    printf("Planta en col 4: %s\n", planta_en_4 ? "Sí" : "No");
+    printf("Planta en col 5: %s\n", planta_en_5 ? "Sí" : "No");
+    printf("Esperado: solo col 5 = Sí\n");
+    printf("%s\n", (!planta_en_3 && !planta_en_4 && planta_en_5) ? "PASÓ" : "FALLÓ");
+    gameBoardDelete(board_test2);
+    
+    printf("\n");
+
+    // TEST 3: Llenar una fila de plantas, sacar una del medio
+    printf("TEST 3: Llenar una fila de plantas. Sacar una del medio (col 4)\n");
+    GameBoard* board_test3 = gameBoardNew();
+    
+    for (int col = 0; col < GRID_COLS; col++) {
+        gameBoardAddPlant(board_test3, 0, col);
+    }
+    
+    printf("Fila completa llena de plantas\n");
+    
+    gameBoardRemovePlant(board_test3, 0, 4);
+    
+    // Contar plantas restantes
+    int contador_plantas = 0;
+    int columna_4_vacia = 1;
+    seg = board_test3->rows[0].first_segment;
+    
+    while (seg != NULL) {
+        if (seg->status == STATUS_PLANTA) {
+            contador_plantas++;
+            if (seg->start_col == 4) {
+                columna_4_vacia = 0;
+            }
+        }
+        seg = seg->next;
+    }
+    
+    printf("Plantas restantes: %d\n", contador_plantas);
+    printf("Columna 4 vacía: %s\n", columna_4_vacia ? "Sí" : "No");
+    printf("Esperado: %d plantas, columna 4 vacía\n", GRID_COLS - 1);
+    printf("%s\n", (contador_plantas == GRID_COLS - 1 && columna_4_vacia) ? "PASÓ" : "FALLÓ");
+    gameBoardDelete(board_test3);
+}
+
+void testGameBoardAddZombie() {
+    printf("CASOS DE TEST GAMEBOARD ADD ZOMBIE \n");
+    
+    // TEST 1: Tomar una lista de 3 zombies y agregarle uno más
+    printf("TEST 1: Crear 3 zombies y agregar uno más\n");
+    GameBoard* board_test1 = gameBoardNew();
+    
+    gameBoardAddZombie(board_test1, 2);
+    gameBoardAddZombie(board_test1, 2);
+    gameBoardAddZombie(board_test1, 2);
+    
+    printf("3 zombies agregados en fila 2\n");
+    
+    gameBoardAddZombie(board_test1, 2);
+    
+    // Contar zombies
+    int contador_zombies = 0;
+    ZombieNode* znode = board_test1->rows[2].first_zombie;
+    while (znode != NULL) {
+        contador_zombies++;
+        znode = znode->next;
+    }
+    
+    printf("Zombies en fila 2: %d\n", contador_zombies);
+    printf("Esperado: 4 zombies\n");
+    printf("%s\n", contador_zombies == 4 ? "PASÓ" : "FALLÓ");
+    gameBoardDelete(board_test1);
+    
+    printf("\n");
+    
+    // TEST 2: Crear una lista de 10000 zombies
+    printf("TEST 2: Crear una lista de 10000 zombies\n");
+    GameBoard* board_test2 = gameBoardNew();
+    
+    printf("Agregando 10000 zombies...\n");
+    for (int i = 0; i < 10000; i++) {
+        gameBoardAddZombie(board_test2, 1);
+    }
+    
+    // Contar zombies
+    contador_zombies = 0;
+    znode = board_test2->rows[1].first_zombie;
+    while (znode != NULL) {
+        contador_zombies++;
+        znode = znode->next;
+    }
+    
+    printf("Zombies en fila 1: %d\n", contador_zombies);
+    printf("Esperado: 10000 zombies\n");
+    printf("%s\n", contador_zombies == 10000 ? "PASÓ" : "FALLÓ");
+    gameBoardDelete(board_test2);
+}
+
 int main(int argc, char* args[]) {
 	printf("SOME TESTS!\n");
 	testStrDuplicate();
@@ -902,6 +1175,12 @@ int main(int argc, char* args[]) {
 	testStrCompare();
 	printf("\n");
 	testStrConcatenate();
+	printf("\n");
+	testGameBoardRemovePlant();
+	printf("\n");
+	testGameBoardAddPlant();
+	printf("\n");
+	testGameBoardAddZombie();
 
     srand(time(NULL));
     if (!inicializar()) return 1;
