@@ -268,7 +268,7 @@ int gameBoardAddPlant(GameBoard* board, int row, int col) {
             }
             
             // Caso 2: Debo insertar la planta al inicio del segmento
-            if (col == mySegment->start_col) {
+            else if (col == mySegment->start_col) {
                 RowSegment* newSegment = (RowSegment*)malloc(sizeof(RowSegment));
                 if (!newSegment) {
                     free(newPlant);
@@ -300,7 +300,7 @@ int gameBoardAddPlant(GameBoard* board, int row, int col) {
                 Voy a crear un nuevo segmento que va a tener los valores de mi segmento original
                 Al segmento que solía estar apuntando al final lo redirecciono
             */
-            if (col == ultSegment - 1) {
+            else if (col == ultSegment - 1) {
                 RowSegment* newSegment = (RowSegment*)malloc(sizeof(RowSegment));
                 // Evito leaks!
                 if (!newSegment) {
@@ -324,33 +324,35 @@ int gameBoardAddPlant(GameBoard* board, int row, int col) {
                 En este caso voy a querer ajustar el segmento a la izquierda de mi segmento
                 Mientras utilizo el segmento que tengo a la derecha para crear mi nuevo rango
             */
-            RowSegment* mySegmentCopy = (RowSegment*)malloc(sizeof(RowSegment));
-            RowSegment* mySegmentRight = (RowSegment*)malloc(sizeof(RowSegment));
+            else {
+				RowSegment* mySegmentCopy = (RowSegment*)malloc(sizeof(RowSegment));
+				RowSegment* mySegmentRight = (RowSegment*)malloc(sizeof(RowSegment));
 
-            // Evito leaks!
-            if (!mySegmentCopy || !mySegmentRight) {
-                free(newPlant);
-                if (mySegmentCopy) free(mySegmentCopy);
-                if (mySegmentRight) free(mySegmentRight);
-                return 0;
-            }
-            
-            mySegmentCopy->status = STATUS_PLANTA;
-            mySegmentCopy->start_col = col;
-            mySegmentCopy->length = 1;
-            mySegmentCopy->planta_data = newPlant;
-            
-            mySegmentRight->status = STATUS_VACIO;
-            mySegmentRight->start_col = col + 1;
-            mySegmentRight->length = ultSegment - (col + 1);
-            mySegmentRight->planta_data = NULL;
-            mySegmentRight->next = mySegment->next;
-            
-            mySegment->length = col - mySegment->start_col;
-            mySegment->next = mySegmentCopy;
-            mySegmentCopy->next = mySegmentRight;
+				// Evito leaks!
+				if (!mySegmentCopy || !mySegmentRight) {
+					free(newPlant);
+					if (mySegmentCopy) free(mySegmentCopy);
+					if (mySegmentRight) free(mySegmentRight);
+					return 0;
+				}
+				
+				mySegmentCopy->status = STATUS_PLANTA;
+				mySegmentCopy->start_col = col;
+				mySegmentCopy->length = 1;
+				mySegmentCopy->planta_data = newPlant;
+				
+				mySegmentRight->status = STATUS_VACIO;
+				mySegmentRight->start_col = col + 1;
+				mySegmentRight->length = ultSegment - (col + 1);
+				mySegmentRight->planta_data = NULL;
+				mySegmentRight->next = mySegment->next;
+				
+				mySegment->length = col - mySegment->start_col;
+				mySegment->next = mySegmentCopy;
+				mySegmentCopy->next = mySegmentRight;
 
-            return 1;
+				return 1;
+			}
         }
         
         prevSegment = mySegment;
@@ -1169,6 +1171,8 @@ void testGameBoardAddZombie() {
 }
 
 int main(int argc, char* args[]) {
+	// AREA DE TESTING
+	/*
 	printf("SOME TESTS!\n");
 	testStrDuplicate();
 	printf("\n");
@@ -1181,6 +1185,7 @@ int main(int argc, char* args[]) {
 	testGameBoardAddPlant();
 	printf("\n");
 	testGameBoardAddZombie();
+	*/
 
     srand(time(NULL));
     if (!inicializar()) return 1;
@@ -1225,8 +1230,8 @@ int main(int argc, char* args[]) {
 
 /*
     USO DE IA
-    - Estimamos que entre el 15% y 22% de las líneas de código fueron realizadas con 
-    asistencia de herramientas de IA (principalmente ChatGPT)
+    - Estimamos que entre el 15% y 20% de las líneas de código fueron realizadas con 
+    asistencia de herramientas de IA (principalmente ChatGPT). Más que nada para los casos de test.
 
     - Verificamos las sugerencias validando nosotras manualmente el comportamiento esperado
     
