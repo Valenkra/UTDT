@@ -637,12 +637,12 @@ char* strDuplicate(char* src) {
 
 	// Copiamos los caracteres del string fuente a la nueva región
 	int i = 0;
-	for (int i = 0; src[i] != '\0'; i++) {
+	for (i = 0; src[i] != '\0'; i++) {
 		res[i] = src[i];
 	}
 
 	// Colocamos un terminador
-	res[i] = '\0';
+	res[len_total] = '\0';
 
 	// Devolvemos el puntero al nuevos string dinámico
 	return res;
@@ -652,9 +652,9 @@ int strCompare(char* s1, char* s2){
 	// Recorremos ambos strings en simultáneo y nos detenemos apenas encontremos una diferencia o terminen
 	int i = 0;
 	while (s1[i] != '\0' && s2[i] != '\0') {
-	// Si el carácter de s1 es menor que el de s2, devolvemos 1. Si es mayor, -1.
-        if (s1[i] < s2[i]) return 1;
-        if (s1[i] > s2[i]) return -1;
+	// Si el carácter de s1 es menor que el de s2, devolvemos -1. Si es mayor, 1.
+        if (s1[i] < s2[i]) return -1;
+        if (s1[i] > s2[i]) return 1;
         i++;
     }
 
@@ -688,12 +688,12 @@ char* strConcatenate(char* src1, char* src2) {
     for (int i = 0; i < len1; i++) {
         res[i] = src1[i];
     }
-    for (int i = 0; j < len2; i++) {
+    for (int i = 0; i < len2; i++) {
         res[len1 + i] = src2[i];
     }
 
-    // Cerramos el nuevo string con ‘/0’
-    res[len1 + len2] = '\0';
+    // Cerramos el nuevo string con ‘\0’
+    res[len1 + len2] = '/0';
 
     // Liberamos la memoria original
     free(src1);
@@ -703,16 +703,44 @@ char* strConcatenate(char* src1, char* src2) {
 }
 
 
-void casosDeTest(){
-    // gameBoardAddPlant
+void testStrDuplicate(){
+	// String vacio
+	printf("El nuevo string vacio duplicado apunta a la memoria %p", strDuplicate(""));
 
-    // gameBoardRemovePlant
+	// String de un caracter
+	printf("El nuevo string de un caracter apunta a la memoria %p", strDuplicate("a"));
 
-    // gameBoardAddZombie
+	// String que incluya todos los caracteres validos distintos de cero
+	char original[256];  // 255 caracteres + terminador
+    int idx = 0;
+    
+	// Incluir TODOS los bytes del 1 al 255
+	for (int c = 1; c <= 255; c++) {
+		original[idx++] = (char)c;
+	}
+	original[idx] = '\0';  // Terminador
+
+	// Duplicar y verificar
+	char* duplicado = strDuplicate(original);
+	if (duplicado == NULL) {
+		printf("Error: strDuplicate falló\n");
+		return;
+	}
+
+	printf("El string duplicado apunta a la memoria %p\n", (void*)duplicado);
+	free(duplicado);
+}
+
+void testStrCompare() {
+
+}
+
+void testStrConcatenate() {
 
 }
 
 int main(int argc, char* args[]) {
+	testStrDuplicate();
     srand(time(NULL));
     if (!inicializar()) return 1;
 
