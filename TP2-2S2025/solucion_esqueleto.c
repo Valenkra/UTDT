@@ -170,6 +170,7 @@ void gameBoardRemovePlant(GameBoard* board, int row, int col) {
 
     RowSegment* mySegment = board->rows[row].first_segment;
     RowSegment* prevSegment = NULL; // Me va a servir para hacer la fusión con el anterior
+    int encontrado = 0;
     
     while (mySegment != NULL) {
         // TODO: Encontrar el segmento que contiene `col`.
@@ -204,6 +205,8 @@ void gameBoardRemovePlant(GameBoard* board, int row, int col) {
                 free(mySegment);
                 mySegment = prevSegment;
             }
+            
+            encontrado = 1;
             break; // Si "terminé mi cometido" termino el loop, no busco más nada
         }
         
@@ -211,7 +214,9 @@ void gameBoardRemovePlant(GameBoard* board, int row, int col) {
         mySegment = mySegment->next;
     }
     
-    printf("No se encontró segmento que contenga la columna %d\n", col);
+    if (!encontrado) {
+        printf("No se encontró segmento que contenga la columna %d\n", col);
+    }
 }
 
 int gameBoardAddPlant(GameBoard* board, int row, int col) {
@@ -359,6 +364,7 @@ int gameBoardAddPlant(GameBoard* board, int row, int col) {
         mySegment = mySegment->next;
     }
     
+    // Solo llega aca si no encontro el segmento correcto
     printf("No se encontró segmento que contenga la columna %d\n", col);
     return 0;
 }
@@ -428,14 +434,16 @@ int gameBoardUpdate(GameBoard* board) {
 
             // Si el zombie esta inactivo lo saco del frame
             if (!z->activo) {
+                ZombieNode* aLiberar = zombieNode; // Guardo el nodo que voy a liberar
+                
                 if (prevZombie == NULL) {
                     board->rows[row].first_zombie = zombieNode->next;
-                    zombieNode = zombieNode->next;
                 } else {
                     prevZombie->next = zombieNode->next;
-                    zombieNode = zombieNode->next;
                 }
-                free(zombieNode);
+                
+                zombieNode = zombieNode->next; // Avanzo antes de liberar
+                free(aLiberar); // Libero el nodo correcto
             } else {
                 prevZombie = zombieNode;
                 zombieNode = zombieNode->next;
