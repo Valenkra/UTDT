@@ -622,8 +622,94 @@ void cerrar() {
     SDL_Quit();
 }
 
+// LA PARTE DE LOS STRINGS
+
+char* strDuplicate(char* src) {
+	// Contamos la cantidad de caracteres del string fuente para saber cuánta memoria dinámica hay que solicitar
+	int len_total = 0;
+	for (int i = 0; src[i] != '\0'; i++) {
+		len_total++;
+	}
+	
+	// Pedimos memoria para el nuevo string
+	char* res = (char*) malloc(sizeof(char) * (len_total + 1));
+	if (!res) return NULL;
+
+	// Copiamos los caracteres del string fuente a la nueva región
+	int i = 0;
+	for (int i = 0; src[i] != '\0'; i++) {
+		res[i] = src[i];
+	}
+
+	// Colocamos un terminador
+	res[i] = '\0';
+
+	// Devolvemos el puntero al nuevos string dinámico
+	return res;
+}
+
+int strCompare(char* s1, char* s2){
+	// Recorremos ambos strings en simultáneo y nos detenemos apenas encontremos una diferencia o terminen
+	int i = 0;
+	while (s1[i] != '\0' && s2[i] != '\0') {
+	// Si el carácter de s1 es menor que el de s2, devolvemos 1. Si es mayor, -1.
+        if (s1[i] < s2[i]) return 1;
+        if (s1[i] > s2[i]) return -1;
+        i++;
+    }
+
+	// Si terminan a la vez son iguales
+    if (s1[i] == '\0' && s2[i] == '\0') return 0;
+
+	// Si s1 termina antes, es menor. Si s2 termina antes, s1 es mayor.
+    if (s1[i] == '\0') return 1;  
+    else return -1;
+}
+
+char* strConcatenate(char* src1, char* src2) {
+    // Calculamos la longitud de los strings
+    int len1 = 0;
+    while (src1[len1] != '\0') {
+        len1++;
+    }
+
+    int len2 = 0;
+    while (src2[len2] != '\0') {
+        len2++;
+    }
+
+    // Reservamos la cantidad de memoria dinámica suficiente para concatenar los strings más el carácter terminador
+    char* res = (char*) malloc(len1 + len2 + 1);
+    if (res == NULL) {
+        return NULL;
+    }
+
+    // Copiamos los string en la nueva region - En orden (primero el 1 y despues el 2)
+    for (int i = 0; i < len1; i++) {
+        res[i] = src1[i];
+    }
+    for (int i = 0; j < len2; i++) {
+        res[len1 + i] = src2[i];
+    }
+
+    // Cerramos el nuevo string con ‘/0’
+    res[len1 + len2] = '\0';
+
+    // Liberamos la memoria original
+    free(src1);
+    free(src2);
+
+    return res;
+}
+
+
 void casosDeTest(){
-    
+    // gameBoardAddPlant
+
+    // gameBoardRemovePlant
+
+    // gameBoardAddZombie
+
 }
 
 int main(int argc, char* args[]) {
@@ -668,5 +754,19 @@ int main(int argc, char* args[]) {
 }
 
 
+/*
+    USO DE IA
+    - Estimamos que entre el 10% y 20% de las líneas de código fueron realizadas con 
+    asistencia de herramientas de IA (principalmente ChatGPT)
 
+    - Verificamos las sugerencias validando nosotras manualmente el comportamiento esperado
+    
+    - La inteligencia artificial en ocasiones sugería soluciones más 
+    complejas de las que habíamos visto en clase, por lo que le adjuntamos a 
+    la IA fragmentos de código base y archivos de clase, explicándole qué herramientas sí habíamos visto 
+    
+    - El uso de IA nos permitió ayudar a entender mejor cómo manipular 
+    estructuras dinámicas y manejo de punteros que a veces puede ser muy confuso, 
+    además de aprender a poner en palabras y explicar mejor lo que hace nuestro código
 
+*/
