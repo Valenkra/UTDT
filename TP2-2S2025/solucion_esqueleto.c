@@ -702,52 +702,127 @@ char* strConcatenate(char* src1, char* src2) {
     return res;
 }
 
-
 void testStrDuplicate(){
 	printf("CASOS DE TEST STR DUPLICATE \n");
+    
 	// String vacio
-	printf("El nuevo string vacio duplicado apunta a la memoria %p \n", strDuplicate(""));
+    printf("TEST 1: Duplicar string vacío\n");
+    char* s1_test1 = strDuplicate("");
+    
+    if (s1_test1 == NULL) {
+        printf("ERROR: strDuplicate devolvió NULL\n");
+    } else {
+        printf("Resultado: apunta a la memoria %p\n", (void*)s1_test1);
+        printf("Contenido: \"%s\"\n", s1_test1);
+        printf("Esperado: string vacío\n");
+        printf("%s\n", strcmp(s1_test1, "") == 0 ? "PASÓ" : "FALLÓ");
+        free(s1_test1);
+    }
+    
+    printf("\n");
+    
+    // String de un caracter
+    printf("TEST 2: Duplicar string de un carácter\n");
+    char* s1_test2 = strDuplicate("a");
+    
+    if (s1_test2 == NULL) {
+        printf("ERROR: strDuplicate devolvió NULL\n");
+    } else {
+        printf("Resultado: apunta a la memoria %p\n", (void*)s1_test2);
+        printf("Contenido: \"%s\"\n", s1_test2);
+        printf("Esperado: \"a\"\n");
+        printf("%s\n", strcmp(s1_test2, "a") == 0 ? "PASÓ" : "FALLÓ");
+        free(s1_test2);
+    }
+    
+    printf("\n");
 
-	// String de un caracter
-	printf("El nuevo string de un caracter apunta a la memoria %p \n", strDuplicate("a"));
-
-	// String que incluya todos los caracteres validos distintos de cero
-	char original[256];  // 255 caracteres + terminador
+    // String que incluya todos los caracteres validos distintos de cero
+    printf("TEST 3: Duplicar string con todos los caracteres válidos (1-255)\n");
+    char original[256];  // 255 caracteres + terminador
     int idx = 0;
     
-	// Incluir TODOS los bytes del 1 al 255
-	for (int c = 1; c <= 255; c++) {
-		original[idx++] = (char)c;
-	}
-	original[idx] = '\0';  // Terminador
+    // Incluir TODOS los bytes del 1 al 255
+    for (int c = 1; c <= 255; c++) {
+        original[idx++] = (char)c;
+    }
+    original[idx] = '\0';  // Terminador
 
-	// Duplicar y verificar
-	char* duplicado = strDuplicate(original);
-	if (duplicado == NULL) {
-		printf("Error: strDuplicate falló\n");
-		return;
-	}
-
-	printf("El string duplicado apunta a la memoria %p\n", (void*)duplicado);
-	free(duplicado);
+    // Duplicar y verificar
+    char* duplicado = strDuplicate(original);
+    
+    if (duplicado == NULL) {
+        printf("ERROR: strDuplicate devolvió NULL\n");
+    } else {
+        printf("Resultado: apunta a la memoria %p\n", (void*)duplicado);
+        printf("Longitud original: %d\n", idx);
+        printf("Longitud duplicado: %zu\n", strlen(duplicado));
+        printf("Esperado: 255 caracteres\n");
+        printf("%s\n", strcmp(duplicado, original) == 0 ? "PASÓ" : "FALLÓ");
+        free(duplicado);
+    }
 }
 
 void testStrCompare() {
 	printf("CASOS DE TEST STR COMPARE \n");
-
+    
 	// Dos strings vacios
-	printf("El resultado de comparar dos string vacios es: %d\n", strCompare("",""));
+    printf("TEST 1: Comparar dos strings vacíos\n");
+    char* s1_test1 = strDuplicate("");
+    char* s2_test1 = strDuplicate("");
+    int resultado1 = strCompare(s1_test1, s2_test1);
+    
+    printf("Resultado: %d\n", resultado1);
+    printf("Esperado: 0\n");
+    printf("%s\n", resultado1 == 0 ? "PASÓ" : "FALLÓ");
+    
+    printf("\n");
+    
+    // Dos strings de un caracter
+    printf("TEST 2: Comparar dos strings de un carácter\n");
+    char* s1_test2 = strDuplicate("a");
+    char* s2_test2 = strDuplicate("d");
+    int resultado2 = strCompare(s1_test2, s2_test2);
+    
+    printf("Resultado: %d\n", resultado2);
+    printf("Esperado: valor negativo (a < d)\n");
+    printf("%s\n", resultado2 < 0 ? "PASÓ" : "FALLÓ");
+    
+    printf("\n");
 
-	// Dos strings de un caracter
-	printf("El resultado de comparar dos string de un caracter es: %d\n", strCompare("a","d"));
+    // Strings iguales hasta un caracter [str1, str2]
+    printf("TEST 3: Strings iguales hasta un carácter [str1, str2]\n");
+    char* s1_test3 = strDuplicate("aloha");
+    char* s2_test3 = strDuplicate("aloho");
+    int resultado3 = strCompare(s1_test3, s2_test3);
+    
+    printf("Resultado: %d\n", resultado3);
+    printf("Esperado: valor negativo (a < o)\n");
+    printf("%s\n", resultado3 < 0 ? "PASÓ" : "FALLÓ");
+    
+    printf("\n");
 
-	// String iguales hasta un caracter
-	printf("Strings iguales hasta un caracter [str1, str2]: %d\n", strCompare("aloha","aloho"));
-	printf("Strings iguales hasta un caracter [str2, str1]: %d\n", strCompare("aloho","aloha"));
+    // Strings iguales hasta un caracter [str2, str1]
+    printf("TEST 4: Strings iguales hasta un carácter [str2, str1]\n");
+    char* s1_test4 = strDuplicate("aloho");
+    char* s2_test4 = strDuplicate("aloha");
+    int resultado4 = strCompare(s1_test4, s2_test4);
+    
+    printf("Resultado: %d\n", resultado4);
+    printf("Esperado: valor positivo (o > a)\n");
+    printf("%s\n", resultado4 > 0 ? "PASÓ" : "FALLÓ");
+    
+    printf("\n");
 
-	// Dos strings diferentes
-	printf("Comparo dos strings diferentes: %d\n", strCompare("mamma mia","gimme gimme"));
-
+    // TEST 5: Dos strings diferentes
+    printf("TEST 5: Comparar dos strings diferentes\n");
+    char* s1_test5 = strDuplicate("mamma mia");
+    char* s2_test5 = strDuplicate("gimme gimme");
+    int resultado5 = strCompare(s1_test5, s2_test5);
+    
+    printf("Resultado: %d\n", resultado5);
+    printf("Esperado: valor positivo (m > g)\n");
+    printf("%s\n", resultado5 > 0 ? "PASÓ" : "FALLÓ");
 }
 
 void testStrConcatenate() {
