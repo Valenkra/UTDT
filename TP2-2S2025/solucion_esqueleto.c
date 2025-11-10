@@ -1238,7 +1238,7 @@ int main(int argc, char* args[]) {
 /*
     USO DE IA
     - Estimamos que entre el 15% y 20% de las líneas de código fueron realizadas con 
-    asistencia de herramientas de IA (principalmente ChatGPT). Más que nada para los casos de test.
+    asistencia de herramientas de IA (principalmente ChatGPT). Más que nada fue utilizada para los casos de test.
 
     - Verificamos las sugerencias validando nosotras manualmente el comportamiento esperado
     
