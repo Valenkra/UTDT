@@ -693,7 +693,7 @@ char* strConcatenate(char* src1, char* src2) {
     }
 
     // Cerramos el nuevo string con ‘\0’
-    res[len1 + len2] = '/0';
+    res[len1 + len2] = '\0';
 
     // Liberamos la memoria original
     free(src1);
@@ -704,11 +704,12 @@ char* strConcatenate(char* src1, char* src2) {
 
 
 void testStrDuplicate(){
+	printf("CASOS DE TEST STR DUPLICATE \n");
 	// String vacio
-	printf("El nuevo string vacio duplicado apunta a la memoria %p", strDuplicate(""));
+	printf("El nuevo string vacio duplicado apunta a la memoria %p \n", strDuplicate(""));
 
 	// String de un caracter
-	printf("El nuevo string de un caracter apunta a la memoria %p", strDuplicate("a"));
+	printf("El nuevo string de un caracter apunta a la memoria %p \n", strDuplicate("a"));
 
 	// String que incluya todos los caracteres validos distintos de cero
 	char original[256];  // 255 caracteres + terminador
@@ -732,6 +733,20 @@ void testStrDuplicate(){
 }
 
 void testStrCompare() {
+	printf("CASOS DE TEST STR COMPARE \n");
+
+	// Dos strings vacios
+	printf("El resultado de comparar dos string vacios es: %d\n", strCompare("",""));
+
+	// Dos strings de un caracter
+	printf("El resultado de comparar dos string de un caracter es: %d\n", strCompare("a","d"));
+
+	// String iguales hasta un caracter
+	printf("Strings iguales hasta un caracter [str1, str2]: %d\n", strCompare("aloha","aloho"));
+	printf("Strings iguales hasta un caracter [str2, str1]: %d\n", strCompare("aloho","aloha"));
+
+	// Dos strings diferentes
+	printf("Comparo dos strings diferentes: %d\n", strCompare("mamma mia","gimme gimme"));
 
 }
 
