@@ -752,18 +752,72 @@ void testStrCompare() {
 
 void testStrConcatenate() {
 	printf("CASOS DE TEST STR CONCATENATE \n");
-	
+    
 	// Un string vacio y un string de 3 caracteres
-	printf("Concatenar 0chars y 3chars: %s\n", strConcatenate("","alo"));
+    printf("TEST 1: Concatenar 0 chars + 3 chars\n");
+    char* s1_test1 = strDuplicate("");
+    char* s2_test1 = strDuplicate("alo");
+    char* resultado1 = strConcatenate(s1_test1, s2_test1);
+    
+    if (resultado1 == NULL) {
+        printf("ERROR: strConcatenate devolvió NULL\n");
+    } else {
+        printf("Resultado: \"%s\"\n", resultado1);
+        printf("Esperado: \"alo\"\n");
+        printf("%s\n", strcmp(resultado1, "alo") == 0 ? "PASÓ" : "FALLÓ");
+        free(resultado1);
+    }
+    
+    printf("\n");
+    
+    // String de 3 caracteres + string vacío
+    printf("TEST 2: Concatenar 3 chars + 0 chars\n");
+    char* s1_test2 = strDuplicate("alo");
+    char* s2_test2 = strDuplicate("");
+    char* resultado2 = strConcatenate(s1_test2, s2_test2);
+    
+    if (resultado2 == NULL) {
+        printf("ERROR: strConcatenate devolvió NULL\n");
+    } else {
+        printf("Resultado: \"%s\"\n", resultado2);
+        printf("Esperado: \"alo\"\n");
+        printf("%s\n", strcmp(resultado2, "alo") == 0 ? "PASÓ" : "FALLÓ");
+        free(resultado2);
+    }
+    
+    printf("\n");
 
-	// Un string de 3 caracteres y un string vacio
-	printf("Concatenar 3chars y 0chars: %s\n", strConcatenate("alo",""));
+    // Dos strings de 1 carácter
+    printf("TEST 3: Concatenar dos strings de 1 char\n");
+    char* s1_test3 = strDuplicate("a");
+    char* s2_test3 = strDuplicate("h");
+    char* resultado3 = strConcatenate(s1_test3, s2_test3);
+    
+    if (resultado3 == NULL) {
+        printf("ERROR: strConcatenate devolvió NULL\n");
+    } else {
+        printf("Resultado: \"%s\"\n", resultado3);
+        printf("Esperado: \"ah\"\n");
+        printf("%s\n", strcmp(resultado3, "ah") == 0 ? "PASÓ" : "FALLÓ");
+        free(resultado3);
+    }
+    
+    printf("\n");
 
-	// Dos strings de 1 caracter
-	printf("Concatenar dos strings de 1 char: %s\n", strConcatenate("a","h"));
-
-	// Dos strings de 5 caracteres
-	printf("Concatenar dos strings de 5 chars: %s\n", strConcatenate("aloha","holas"));
+    // TEST 4: Dos strings de 5 caracteres
+    printf("TEST 4: Concatenar dos strings de 5 chars\n");
+    char* s1_test4 = strDuplicate("aloha");
+    char* s2_test4 = strDuplicate("holas");
+    char* resultado4 = strConcatenate(s1_test4, s2_test4);
+    
+    if (resultado4 == NULL) {
+        printf("ERROR: strConcatenate devolvió NULL\n");
+    } else {
+        printf("Resultado: \"%s\"\n", resultado4);
+        printf("Esperado: \"alohaholas\"\n");
+        printf("%s\n", strcmp(resultado4, "alohaholas") == 0 ? "PASÓ" : "FALLÓ");
+        free(resultado4);
+    }
 }
 
 int main(int argc, char* args[]) {
