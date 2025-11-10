@@ -756,6 +756,8 @@ void testStrConcatenate() {
 
 int main(int argc, char* args[]) {
 	testStrDuplicate();
+	testStrCompare();
+
     srand(time(NULL));
     if (!inicializar()) return 1;
 
