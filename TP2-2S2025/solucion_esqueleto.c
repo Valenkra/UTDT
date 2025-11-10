@@ -652,9 +652,9 @@ int strCompare(char* s1, char* s2){
 	// Recorremos ambos strings en simultáneo y nos detenemos apenas encontremos una diferencia o terminen
 	int i = 0;
 	while (s1[i] != '\0' && s2[i] != '\0') {
-	// Si el carácter de s1 es menor que el de s2, devolvemos -1. Si es mayor, 1.
-        if (s1[i] < s2[i]) return -1;
-        if (s1[i] > s2[i]) return 1;
+	// Si el carácter de s1 es menor que el de s2, devolvemos 1. Si es mayor, -1.
+        if (s1[i] < s2[i]) return 1;
+        if (s1[i] > s2[i]) return -1;
         i++;
     }
 
@@ -751,12 +751,28 @@ void testStrCompare() {
 }
 
 void testStrConcatenate() {
+	printf("CASOS DE TEST STR CONCATENATE \n");
+	
+	// Un string vacio y un string de 3 caracteres
+	printf("Concatenar 0chars y 3chars: %s\n", strConcatenate("","alo"));
 
+	// Un string de 3 caracteres y un string vacio
+	printf("Concatenar 3chars y 0chars: %s\n", strConcatenate("alo",""));
+
+	// Dos strings de 1 caracter
+	printf("Concatenar dos strings de 1 char: %s\n", strConcatenate("a","h"));
+
+	// Dos strings de 5 caracteres
+	printf("Concatenar dos strings de 5 chars: %s\n", strConcatenate("aloha","holas"));
 }
 
 int main(int argc, char* args[]) {
+	printf("SOME TESTS!\n");
 	testStrDuplicate();
+	printf("\n");
 	testStrCompare();
+	printf("\n");
+	testStrConcatenate();
 
     srand(time(NULL));
     if (!inicializar()) return 1;
