@@ -426,25 +426,25 @@ int gameBoardUpdate(GameBoard* board) {
                 
                 // Actualizo la animación
                 z->frame_timer++;
-                if(z->frame_timer >= ZOMBIE_ANIMATION_SPEED) {
+                if (z->frame_timer >= ZOMBIE_ANIMATION_SPEED) {
                     z->frame_timer = 0;
                     z->current_frame = (z->current_frame + 1) % ZOMBIE_TOTAL_FRAMES;
                 }
             }
 
             // Si el zombie esta inactivo lo saco del frame
-            else if(!z->activo) {
+            if (!z->activo) {
                 ZombieNode* aLiberar = zombieNode; // Guardo el nodo que voy a liberar
                 
                 if (prevZombie == NULL) {
                     board->rows[row].first_zombie = zombieNode->next;
-                }else {
+                } else {
                     prevZombie->next = zombieNode->next;
                 }
                 
                 zombieNode = zombieNode->next; // Avanzo antes de liberar
                 free(aLiberar); // Libero el nodo correcto
-            }else {
+            } else {
                 prevZombie = zombieNode;
                 zombieNode = zombieNode->next;
             }
@@ -462,7 +462,8 @@ int gameBoardUpdate(GameBoard* board) {
                 // Actualizo los cooldowna
                 if (p->cooldown > 0) {
                     p->cooldown--;
-                } else { p->debe_disparar = 1;
+                } else {
+					p->debe_disparar = 1;
                 }
                 
                 // Actualizo las animaciones
@@ -1235,6 +1236,7 @@ int main(int argc, char* args[]) {
 }
 
 
+
 /*
     USO DE IA
     - Estimamos que entre el 15% y 20% de las líneas de código fueron realizadas con 
@@ -1251,3 +1253,4 @@ int main(int argc, char* args[]) {
     además de aprender a poner en palabras y explicar mejor lo que hace nuestro código
 
 */
+
